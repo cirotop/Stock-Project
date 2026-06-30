@@ -2,14 +2,6 @@
 ## Stock Proyect — Sistema de gestión para kiosco de barrio
 ### Reglas de Negocio
 
-**Alumno:** Ciro Matías Peñas
-**Tutor:** Sebastián Bruselario
-**TSDS — ISPI N.º 9045 "Zona Oeste"** · Rosario, Santa Fe
-
----
-
-Una regla de negocio es una declaración de una política o condición que debe cumplirse. A continuación se documentan las reglas que rigen el funcionamiento de Stock Proyect, clasificadas según su tipo: hechos, restricciones, acciones disparadoras, cálculos e inferencias.
-
 ---
 
 ## Hechos — condiciones que deben ser verdaderas
