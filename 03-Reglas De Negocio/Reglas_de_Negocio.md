@@ -1,6 +1,4 @@
-# Práctica Profesionalizante I
-## Stock Proyect — Sistema de gestión para kiosco de barrio
-### Reglas de Negocio
+# Reglas de Negocio
 
 ---
 
