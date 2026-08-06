@@ -36,6 +36,7 @@ Documentación de los requerimientos funcionales del sistema de gestión de la d
 **Postcondiciones:** El usuario queda autenticado con los permisos de su rol.
 
 **Escenario de éxito:** el usuario ingresó al sistema con los permisos de su rol.
+
 **Escenario de fracaso:** el usuario no pudo ingresar por credenciales inválidas.
 
 ---
@@ -63,6 +64,9 @@ Documentación de los requerimientos funcionales del sistema de gestión de la d
 7.a Al descontar el stock, un producto queda en o por debajo de su stock mínimo.
 7.a.1 El sistema genera una alerta de stock bajo para ese producto.
 
+**A tener en cuenta:**
+Los caminos alternativos del punto 6 se pueden realizar en cualquier momento pero focalizamos en este punto por contexto al realizar una compra.
+
 **Postcondiciones:** La venta queda registrada y el stock de los productos vendidos queda actualizado.
 
 **Escenario de éxito:** la venta se registró y el stock se descontó correctamente.
@@ -84,7 +88,7 @@ Documentación de los requerimientos funcionales del sistema de gestión de la d
 5. El sistema confirma la actualización del stock.
 
 **Caminos alternativos:**
-2.a El producto no existe todavía.
+2.a El producto o proveedor no existen todavía.
 2.a.1 El sistema ofrece dar de alta el producto (CU-04) o cancelar la operación.
 
 **Postcondiciones:** El stock del producto queda incrementado con la cantidad ingresada.
