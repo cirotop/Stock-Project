@@ -29,7 +29,7 @@ Los almacenamientos son los flujos de datos en reposo del sistema. Cada uno se d
 
     Proveedor = @idProveedor + razonSocial + cuit + (telefono) + (email) + (direccion)
 
-    Producto = @idProducto + codigoProducto + nombreProducto + (descripcionProducto) + idCategoria + idProveedor + precioUnitario + stockActual + stockMinimo
+    Producto = @idProducto + nombreProducto + (descripcionProducto) + idCategoria + idProveedor + precioUnitario + stockActual + stockMinimo
 
     Venta = @idVenta + fechaVenta + idUsuario + 1{DetalleVenta}n + totalVenta
 
@@ -63,12 +63,11 @@ Mínimas unidades indivisibles de datos, con su nombre, descripción, longitud, 
 | descripcionCategoria | Descripción de la categoría. | 150 | Alfanumérico | Texto libre |
 | idProveedor | Identificador único del proveedor. | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
 | razonSocial | Razón social del proveedor. | 100 | Alfanumérico | Texto libre |
-| cuit | CUIT del proveedor. | 13 | Alfanumérico | Formato XX-XXXXXXXX-X |
-| telefono | Teléfono de contacto. | 30 | Alfanumérico | Texto libre |
+| cuit | CUIT del proveedor. | 13 | Numérico | Formato XX-XXXXXXXX-X |
+| telefono | Teléfono de contacto. | 30 | Numérico | Texto libre |
 | email | Correo electrónico de contacto. | 80 | Alfanumérico | Texto libre |
 | direccion | Domicilio del proveedor. | 120 | Alfanumérico | Texto libre |
 | idProducto | Identificador único del producto. | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
-| codigoProducto | Código interno o de barras (único). | 30 | Alfanumérico | Texto libre |
 | nombreProducto | Nombre del producto. | 100 | Alfanumérico | Texto libre |
 | descripcionProducto | Descripción del producto. | 200 | Alfanumérico | Texto libre |
 | precioUnitario | Precio de venta vigente del producto. | 12,2 | Numérico (decimal) | Continuo: {vi: 0; vf: n} |
