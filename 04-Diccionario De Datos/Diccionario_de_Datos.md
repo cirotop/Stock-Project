@@ -23,17 +23,17 @@ Los almacenamientos son los flujos de datos en reposo del sistema. Cada uno se d
 
     Rol = @idRol + nombreRol + (descripcionRol)
 
-    Usuario = @idUsuario + nombreUsuario + contraseña + nombreCompleto + idRol
+    Usuario = @idUsuario + nombreUsuario + contraseña + nombreCompleto + idRol + estadoUsuario
 
     Categoria = @idCategoria + nombreCategoria + (descripcionCategoria)
 
-    Proveedor = @idProveedor + razonSocial + cuit + (telefono) + (email) + (direccion)
+    Proveedor = @idProveedor + razonSocial + cuit + (telefono) + (email) + (direccion) + estadoProveedor
 
-    Producto = @idProducto + nombreProducto + (descripcionProducto) + idCategoria + idProveedor + precioUnitario + stockActual + stockMinimo
+    Producto = @idProducto + nombreProducto + (descripcionProducto) + idCategoria + idProveedor + precioUnitario + stockActual + stockMinimo + estadoProducto
 
-    Venta = @idVenta + fechaVenta + idUsuario + 1{DetalleVenta}n + totalVenta
+    Venta = @idVenta + fechaVenta + idUsuario + 1{DetalleVenta}n + totalVenta + estadoVenta
 
-    DetalleVenta = @idDetalle + idVenta + idProducto + cantidad + precioUnitario + subtotal
+    DetalleVenta = @idDetalle + idVenta + idProducto + cantidad + precioUnitario + subtotal 
 
 ---
 
@@ -42,6 +42,8 @@ Los almacenamientos son los flujos de datos en reposo del sistema. Cada uno se d
 Dato elemental cuyo valor se elige de un conjunto cerrado de alternativas:
 
     nombreRol = [ Administrador | Empleado ]
+    estado = [ activo | inactivo ]
+    estadoVenta = [ confirmada | anulada ]
 
 ---
 
@@ -79,3 +81,7 @@ Mínimas unidades indivisibles de datos, con su nombre, descripción, longitud, 
 | idDetalle | Identificador único del detalle de venta. | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
 | cantidad | Cantidad de unidades vendidas del producto. | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
 | subtotal | Subtotal de la línea (cantidad x precioUnitario). | 12,2 | Numérico (decimal) | Continuo: {vi: 0; vf: n} |
+| estadoUsuario | Estado del usuario. | — | Booleano |  dominio {(1, activo); (0, inactivo)} |
+| estadoProveedor | Estado del proveedor. | — | Booleano |  dominio {(1, activo); (0, inactivo)} |
+| estadoProducto | Estado del producto. | — | Booleano |  dominio {(1, activo); (0, inactivo)} |
+| estadoVenta | Estado de la venta | — | Alfanumérico | dominio {(C, confirmada); (A, anulada)} |
