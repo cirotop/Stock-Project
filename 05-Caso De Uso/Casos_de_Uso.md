@@ -236,3 +236,75 @@ c. Baja: el Administrador da de baja un usuario (queda inactivo).
 
 **Escenario de éxito:** el Administrador obtuvo el listado de productos a reponer.
 **Escenario de fracaso:** no se muestran productos porque ninguno está bajo el mínimo.
+
+---
+
+## CU-10 - Anular venta
+
+**Actores:** Administrador (primario).
+
+**Precondiciones:** El Administrador debe estar logueado. La venta debe existir y no haber sido anulada previamente. (El Empleado no tiene este permiso.)
+
+**Camino básico:**
+1. El Administrador busca la venta que quiere anular.
+2. El sistema muestra el detalle de la venta.
+3. El Administrador confirma la anulación.
+4. El sistema marca la venta como anulada y repone al stock las cantidades de cada producto que tenía la venta.
+
+**Caminos alternativos:**
+1.a La venta no existe.
+1.a.1 El sistema avisa "venta no encontrada" y vuelve al paso 1.
+3.a La venta ya estaba anulada.
+3.a.1 El sistema avisa que la venta ya fue anulada y no realiza cambios. Fin.
+
+**Postcondiciones:** La venta queda anulada y el stock de esos productos vuelve a estar disponible.
+
+**Escenario de éxito:** la venta se anuló y el stock se repuso correctamente.
+**Escenario de fracaso:** no se anuló porque la venta no existía o ya estaba anulada.
+
+---
+
+## CU-11 - Ajustar stock
+
+**Actores:** Administrador (primario).
+
+**Precondiciones:** El Administrador debe estar logueado. El producto debe existir en el sistema.
+
+**Camino básico:**
+1. El Administrador selecciona el producto que necesita corregir.
+2. Ingresa la cantidad real de stock y el motivo del ajuste.
+3. El sistema actualiza el stock actual del producto con la cantidad indicada.
+4. El sistema confirma el ajuste.
+
+**Caminos alternativos:**
+2.a La cantidad es inválida (negativa) o falta el motivo.
+2.a.1 El sistema avisa que el dato no es válido o está incompleto y vuelve al paso 2.
+
+**Postcondiciones:** El stock actual del producto queda corregido con el valor real.
+
+**Escenario de éxito:** el stock del producto se corrigió con la cantidad real.
+**Escenario de fracaso:** no se realizó el ajuste por un dato inválido o incompleto.
+
+---
+
+## CU-12 - Gestionar categoría (alta y modificación)
+
+**Actores:** Administrador (primario).
+
+**Precondiciones:** El Administrador debe estar logueado.
+
+**Camino básico (alta):**
+1. El Administrador selecciona la opción de alta de categoría.
+2. Ingresa el nombre y, opcionalmente, una descripción.
+3. El sistema valida que el nombre no esté repetido.
+4. El sistema guarda la categoría.
+
+**Caminos alternativos:**
+3.a El nombre ya está registrado.
+3.a.1 El sistema muestra el mensaje "categoría ya registrada" y vuelve al paso 2.
+b. Modificación: el Administrador busca una categoría, edita su nombre o descripción y guarda los cambios.
+
+**Postcondiciones:** La categoría queda dada de alta o modificada.
+
+**Escenario de éxito:** la categoría se registró o se actualizó correctamente.
+**Escenario de fracaso:** el alta no se completó por un nombre repetido.
