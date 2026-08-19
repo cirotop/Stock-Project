@@ -1,4 +1,4 @@
-# Requerimientos Funcionales - Stock Proyect
+#  Análisis y Comparación de Requerimientos Funcionales (RF)
 
 Este documento detalla las funcionalidades principales requeridas para el sistema de gestión de la distribuidora.
 
