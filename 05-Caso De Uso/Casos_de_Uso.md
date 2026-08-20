@@ -1,6 +1,6 @@
 # Casos de Uso - Stock Proyect
 
-Documentación de los requerimientos funcionales del sistema de gestión de la distribuidora de productos capilares desde el punto de vista de los usuarios.
+Documentación de los requerimientos funcionales del sistema de gestión de la distribuidora de productos capilares desde el punto de vista de los usuarios. Versión alineada a las 5 entrevistas.
 
 ---
 
@@ -8,12 +8,12 @@ Documentación de los requerimientos funcionales del sistema de gestión de la d
 
 **Primarios** (utilizan las funciones principales del sistema):
 
-- **Administrador:** acceso total. Gestiona productos, precios, stock, proveedores y usuarios, genera las listas de precios y también puede registrar ventas.
-- **Empleado:** funciones limitadas. Registra ventas y consulta información; no puede modificar precios ni stock.
+- **Administrador:** acceso total. Gestiona productos, precios, stock, proveedores, usuarios, categorías y clientes; genera listas de precios y resúmenes mensuales; registra ventas, ingresos de mercadería, pagos y anulaciones.
+- **Empleado:** funciones limitadas. Registra ventas, cierra la caja diaria y consulta información; no puede modificar precios ni stock, ni anular ventas.
 
-**Secundarios** (tareas de apoyo o sistemas externos):
+**Secundarios** (sistemas externos):
 
-- **Laboratorio:** sistema externo con el que se prevé una posible integración futura (opcional, no crítica).
+- **Laboratorio:** sistema externo con el que se prevé una posible integración futura (opcional, no crítica). Ningún caso de uso lo referencia todavía; se documenta como trabajo futuro y se desarrollará cuando se aborde esa integración.
 
 ---
 
@@ -36,7 +36,6 @@ Documentación de los requerimientos funcionales del sistema de gestión de la d
 **Postcondiciones:** El usuario queda autenticado con los permisos de su rol.
 
 **Escenario de éxito:** el usuario ingresó al sistema con los permisos de su rol.
-
 **Escenario de fracaso:** el usuario no pudo ingresar por credenciales inválidas.
 
 ---
@@ -49,27 +48,31 @@ Documentación de los requerimientos funcionales del sistema de gestión de la d
 
 **Camino básico:**
 1. El usuario selecciona la opción de registrar una nueva venta.
-2. El usuario agrega un producto (por código o nombre) e ingresa la cantidad.
-3. El sistema verifica que haya stock suficiente y calcula el subtotal (cantidad x precio unitario).
-4. El usuario repite el paso 2 por cada producto que se lleve el cliente.
-5. El sistema calcula el total sumando todos los subtotales.
-6. El usuario confirma la venta.
-7. El sistema registra la venta con su fecha, hora y usuario, y descuenta el stock de cada producto vendido.
+2. (Opcional) Si es una venta a plazo, el usuario asocia un cliente registrado.
+3. El usuario agrega un producto (por código o nombre) e ingresa la cantidad.
+4. El sistema verifica que haya stock suficiente y calcula el subtotal (cantidad x precio unitario).
+5. El usuario repite el paso 3 por cada producto que se lleve el cliente.
+6. El sistema calcula el total sumando todos los subtotales.
+7. El usuario ingresa uno o más medios de pago con sus montos hasta cubrir el total.
+8. El usuario confirma la venta.
+9. El sistema registra la venta con su fecha, hora y usuario, descuenta el stock de cada producto y, si es a plazo, genera la deuda en la cuenta corriente del cliente.
+10. (Opcional) Si el cliente lo solicita, el sistema genera el comprobante en PDF.
 
 **Caminos alternativos:**
-3.a El stock del producto es insuficiente.
-3.a.1 El sistema avisa que no hay stock suficiente y no agrega el producto. Vuelve al paso 2.
-6.a El usuario cancela la venta.
-6.a.1 El sistema descarta la venta sin registrar cambios. Fin.
-7.a Al descontar el stock, un producto queda en o por debajo de su stock mínimo.
-7.a.1 El sistema genera una alerta de stock bajo para ese producto.
+2.a El cliente asociado está marcado como moroso.
+2.a.1 El sistema muestra una alerta pero permite continuar con la venta.
+4.a El stock del producto es insuficiente.
+4.a.1 El sistema avisa que no hay stock suficiente y no agrega el producto. Vuelve al paso 3.
+7.a La suma de los medios de pago no coincide con el total.
+7.a.1 El sistema avisa la diferencia y vuelve al paso 7.
+8.a El usuario cancela la venta.
+8.a.1 El sistema descarta la venta sin registrar cambios. Fin.
+9.a Al descontar el stock, un producto queda en o por debajo de su stock mínimo.
+9.a.1 El sistema marca el producto en el listado de stock bajo.
 
-**A tener en cuenta:**
-Los caminos alternativos del punto 6 se pueden realizar en cualquier momento pero focalizamos en este punto por contexto al realizar una compra.
+**Postcondiciones:** La venta queda registrada y el stock actualizado. Si es a plazo, queda registrada la deuda en la cuenta corriente. Si se pidió, queda generado el comprobante.
 
-**Postcondiciones:** La venta queda registrada y el stock de los productos vendidos queda actualizado.
-
-**Escenario de éxito:** la venta se registró y el stock se descontó correctamente.
+**Escenario de éxito:** la venta se registró, el stock se descontó y (si correspondía) se generó la deuda o el comprobante.
 **Escenario de fracaso:** la venta no se registró por falta de stock o por cancelación del usuario.
 
 ---
@@ -78,23 +81,23 @@ Los caminos alternativos del punto 6 se pueden realizar en cualquier momento per
 
 **Actores:** Administrador (primario).
 
-**Precondiciones:** El Administrador debe estar logueado. El producto debe existir en el sistema.
+**Precondiciones:** El Administrador debe estar logueado.
 
 **Camino básico:**
 1. El Administrador selecciona la opción de ingreso de mercadería.
 2. Selecciona el producto y el proveedor.
-3. Ingresa la cantidad recibida.
-4. El sistema suma esa cantidad al stock actual del producto.
-5. El sistema confirma la actualización del stock.
+3. Ingresa la cantidad recibida, la fecha de vencimiento de esa tanda y el gasto total de la compra.
+4. El sistema suma la cantidad al stock del producto, actualiza su fecha de vencimiento y registra el gasto de la compra.
+5. El sistema confirma la actualización.
 
 **Caminos alternativos:**
-2.a El producto o proveedor no existen todavía.
-2.a.1 El sistema ofrece dar de alta el producto (CU-04) o cancelar la operación.
+2.a El producto o el proveedor no existen todavía.
+2.a.1 El sistema ofrece darlos de alta (CU-04 / CU-07) o cancelar la operación.
 
-**Postcondiciones:** El stock del producto queda incrementado con la cantidad ingresada.
+**Postcondiciones:** El stock y la fecha de vencimiento del producto quedan actualizados, y queda registrado el gasto de la compra.
 
-**Escenario de éxito:** el stock del producto se actualizó con la mercadería recibida.
-**Escenario de fracaso:** no se registró el ingreso porque el producto no existía y se canceló.
+**Escenario de éxito:** el stock y el vencimiento se actualizaron y se registró el gasto.
+**Escenario de fracaso:** no se registró el ingreso porque el producto/proveedor no existía y se canceló.
 
 ---
 
@@ -106,7 +109,7 @@ Los caminos alternativos del punto 6 se pueden realizar en cualquier momento per
 
 **Camino básico (alta):**
 1. El Administrador selecciona la opción de alta de producto.
-2. Ingresa el código, nombre, descripción, categoría, proveedor, precio, stock inicial y stock mínimo.
+2. Ingresa el código, nombre, descripción, categoría, proveedor, precio, stock inicial, stock mínimo y fecha de vencimiento.
 3. El sistema valida que el código no esté repetido.
 4. El sistema guarda el producto.
 
@@ -308,3 +311,132 @@ b. Modificación: el Administrador busca una categoría, edita su nombre o descr
 
 **Escenario de éxito:** la categoría se registró o se actualizó correctamente.
 **Escenario de fracaso:** el alta no se completó por un nombre repetido.
+
+---
+
+## CU-13 - Gestionar cliente (alta, baja y modificación)
+
+**Actores:** Administrador (primario).
+
+**Precondiciones:** El Administrador debe estar logueado. Aplica a clientes registrados para ventas a plazo o revendedores.
+
+**Camino básico (alta):**
+1. El Administrador selecciona la opción de alta de cliente.
+2. Ingresa la razón social o nombre, teléfono, dirección, email, opcionalmente el documento (CUIT/DNI) e indica si es responsable inscripto.
+3. El sistema guarda el cliente.
+
+**Caminos alternativos:**
+b. Modificación: el Administrador busca un cliente, edita sus datos y guarda.
+c. Baja: el Administrador da de baja un cliente (queda inactivo, no se elimina).
+
+**Postcondiciones:** El cliente queda dado de alta, modificado o inactivo según la operación.
+
+**Escenario de éxito:** el cliente se registró o se actualizó correctamente.
+**Escenario de fracaso:** no se completó la operación por datos incompletos.
+
+---
+
+## CU-14 - Registrar pago de cliente
+
+**Actores:** Administrador (primario).
+
+**Precondiciones:** El Administrador debe estar logueado. El cliente debe tener una cuenta corriente con deuda pendiente.
+
+**Camino básico:**
+1. El Administrador selecciona el cliente.
+2. El sistema muestra la deuda pendiente.
+3. El Administrador ingresa la fecha y el monto del pago.
+4. El sistema registra el pago y descuenta el monto de la deuda de la cuenta corriente.
+
+**Caminos alternativos:**
+3.a El monto ingresado supera la deuda pendiente.
+3.a.1 El sistema avisa que el monto supera la deuda y vuelve al paso 3.
+
+**Postcondiciones:** Queda registrado el pago y la deuda del cliente queda actualizada.
+
+**Escenario de éxito:** el pago se registró y la deuda disminuyó.
+**Escenario de fracaso:** no se registró el pago por un monto inválido.
+
+---
+
+## CU-15 - Marcar cliente como moroso
+
+**Actores:** Administrador (primario).
+
+**Precondiciones:** El Administrador debe estar logueado. El cliente debe estar registrado.
+
+**Camino básico:**
+1. El Administrador selecciona el cliente.
+2. Lo marca (o desmarca) como moroso.
+3. El sistema guarda el estado del cliente.
+
+**Postcondiciones:** El cliente queda marcado como moroso; en las próximas ventas a ese cliente el sistema mostrará una alerta sin bloquear la venta.
+
+**Escenario de éxito:** el estado de morosidad del cliente se actualizó.
+**Escenario de fracaso:** no se actualizó el estado.
+
+---
+
+## CU-16 - Cerrar caja diaria
+
+**Actores:** Empleado (primario), Administrador.
+
+**Precondiciones:** El usuario debe estar logueado. No debe existir un cierre de caja previo para el día en curso.
+
+**Camino básico:**
+1. El usuario selecciona la opción de cierre de caja.
+2. El sistema calcula el total de caja del día a partir de las ventas registradas.
+3. El usuario cuenta la caja física e ingresa el total verificado.
+4. Si hay diferencia (faltante o sobrante), el usuario ingresa un comentario.
+5. El sistema registra el cierre con el total calculado, el total verificado, la diferencia, el comentario y el usuario.
+
+**Caminos alternativos:**
+1.a Ya se realizó el cierre del día.
+1.a.1 El sistema avisa que la caja de hoy ya fue cerrada. Fin.
+
+**Postcondiciones:** Queda registrado el cierre de caja del día con su diferencia y comentario.
+
+**Escenario de éxito:** la caja del día se cerró correctamente.
+**Escenario de fracaso:** no se cerró porque ya existía un cierre para el día.
+
+---
+
+## CU-17 - Consultar resumen mensual
+
+**Actores:** Administrador (primario).
+
+**Precondiciones:** El Administrador debe estar logueado. (Función exclusiva del Administrador.)
+
+**Camino básico:**
+1. El Administrador selecciona el mes a consultar.
+2. El sistema muestra el total vendido, el total de caja acumulado, la cantidad de ventas y el gasto del mes en compra de mercaderías.
+
+**Caminos alternativos:**
+2.a No hay datos registrados para el mes seleccionado.
+2.a.1 El sistema informa que no hay información para ese mes.
+
+**Postcondiciones:** El Administrador visualiza el resumen del mes.
+
+**Escenario de éxito:** se mostró el resumen mensual con sus totales.
+**Escenario de fracaso:** no se mostró el resumen por falta de datos en el mes.
+
+---
+
+## CU-18 - Consultar productos próximos a vencer
+
+**Actores:** Administrador (primario).
+
+**Precondiciones:** El Administrador debe estar logueado.
+
+**Camino básico:**
+1. El Administrador accede a la vista de vencimientos.
+2. El sistema muestra los productos que están a 15 días o menos de su fecha de vencimiento, y los que ya están vencidos.
+
+**Caminos alternativos:**
+2.a No hay productos próximos a vencer ni vencidos.
+2.a.1 El sistema informa que no hay productos por vencer.
+
+**Postcondiciones:** El Administrador visualiza qué productos están próximos a vencer o vencidos.
+
+**Escenario de éxito:** el Administrador obtuvo el listado de productos por vencer.
+**Escenario de fracaso:** no se muestran productos porque ninguno está próximo a vencer.
