@@ -26,7 +26,7 @@
 - **RN-15** No se puede confirmar una venta sin al menos un producto cargado.
 - **RN-16** Una venta confirmada no se puede editar; únicamente puede anularse.
 - **RN-17** Solo el Administrador puede modificar precios, listas de precios y saldos.
-- **RN-18** Ningún registro se elimina: los productos, proveedores y usuarios se dan de baja de forma lógica (quedan inactivos). Solo el Administrador puede inactivar registros y anular ventas.
+- **RN-18** Ningún registro se elimina: los productos y los clientes se dan de baja de forma lógica (quedan inactivos). Solo el Administrador puede inactivar registros y anular ventas.
 - **RN-19** Ningún usuario puede operar el sistema sin autenticarse con usuario y contraseña.
 - **RN-20** Las contraseñas no se pueden almacenar en texto plano: se guardan cifradas (hash).
 - **RN-21** No se puede repetir el código de un producto ni el CUIT de un proveedor (deben ser únicos).
