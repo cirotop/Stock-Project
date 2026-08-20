@@ -1,26 +1,31 @@
-# Análisis y Comparación de Requerimientos No Funcionales (RNF)
+# Requerimientos No Funcionales - Stock Proyect
 
-Este documento compara la estructura de requerimientos no funcionales propuesta con las necesidades detectadas en la entrevista a Darío Fabián Conti.
+Cualidades y restricciones técnicas que debe cumplir el sistema, derivadas de lo relevado en las entrevistas con Darío Fabián Conti.
 
-## 1. Análisis de RNF Propuestos
-La lista actual de RNF es sólida y cubre las dimensiones críticas para una aplicación de gestión interna:
+## RNF-01 Seguridad
+- Acceso autenticado con usuario y contraseña.
+- Las contraseñas se almacenan cifradas (hash), nunca en texto plano.
+- Restricción de funciones según el rol del usuario (Administrador / Empleado).
 
-* **Seguridad e Integridad (RNF1, RNF2):** Cruciales dado que la entrevista enfatiza restricciones de acceso para modificar precios y balances.
-* **Rendimiento (RNF3):** Alineado con el objetivo de "agilizar" la creación de listas y el control de pedidos.
-* **Usabilidad (RNF4):** Correctamente identificada. Al reemplazar procesos manuales (papel/hoja de cálculo), la interfaz debe reducir la curva de aprendizaje.
-* **Alcance y Despliegue (RNF5, RNF6):** Reflejan con precisión que el sistema es de uso interno y para una única ubicación física.
-* **Escalabilidad y Disponibilidad (RNF7, RNF8):** Consideraciones técnicas necesarias para asegurar que el sistema soporte la proyección a futuro (integraciones, volumen de ventas).
+## RNF-02 Integridad de los datos
+- La información no se elimina físicamente: las bajas son lógicas (registros inactivos).
+- Toda operación que modifica datos queda registrada con el usuario que la realizó y la fecha/hora.
 
-## 2. Comparativa con la Entrevista
+## RNF-03 Integridad y consistencia de los datos financieros
+- Los datos de caja, cuenta corriente y pagos deben mantenerse consistentes entre sí (la deuda refleja las ventas a plazo y los pagos registrados; el total de caja refleja las ventas del día), por tratarse de información sensible para el negocio.
 
-| Requerimiento (RNF) | Prioridad / Justificación | Relación con la Entrevista |
-| :--- | :--- | :--- |
-| **Seguridad** | Alta | Restricción estricta de usuarios (admin/empleado). |
-| **Rendimiento** | Alta | Necesidad de agilizar ventas y seguimiento. |
-| **Usabilidad** | Media-Alta | Transición de gestión manual a digital. |
-| **Integridad** | Alta | Protección de datos contra modificaciones no autorizadas. |
+## RNF-04 Rendimiento
+- El sistema debe agilizar el registro de ventas, el cobro y la generación de listas de precios respecto del proceso manual actual.
 
-## 3. Recomendaciones Adicionales
-Para fortalecer la estructura técnica, se sugieren los siguientes ajustes:
-* **RNF-Backup (Nuevo):** Dada la dependencia actual del papel y Google Sheets, un requerimiento de respaldo automático es vital para asegurar la continuidad.
-* **RNF-Tiempo de Respuesta (Específico):** En lugar de solo "agilizar", definir una métrica (ej: "las alertas push deben enviarse en <5 segundos tras la venta").
+## RNF-05 Usabilidad
+- Interfaz simple que reduzca la curva de aprendizaje en la transición del papel y la planilla de Google a una herramienta digital.
+- Las alertas de stock bajo y de vencimientos se presentan como un panel/listado de consulta al ingresar al sistema.
+
+## RNF-06 Alcance y despliegue
+- Aplicación de escritorio, de uso interno de la distribuidora, para un único local.
+
+## RNF-07 Escalabilidad
+- El sistema debe quedar preparado para incorporar a futuro nuevas funciones e integraciones (por ejemplo, el laboratorio) y soportar un mayor volumen de ventas.
+
+## RNF-08 Disponibilidad y respaldo
+- Respaldo automático de la información, dada la dependencia previa del papel y la planilla de Google, para asegurar la continuidad del negocio.
