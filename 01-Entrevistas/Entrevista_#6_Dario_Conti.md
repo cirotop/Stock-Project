@@ -19,8 +19,6 @@ Me llega en cajas cerradas. Todos los productos de una misma caja vienen con la 
 **¿Nos dejás sacarles fotos a las cajas para dejar documentado que todos los productos traen la misma fecha de vencimiento?**
 Sí, sin problema, saquen las fotos que necesiten. Es tal cual, la fecha viene impresa en la caja y vale para todo lo de adentro.
 
-
-
 ## 3. Qué pasa con un producto cuando se vence
 
 **Cuando un producto se vence, ¿qué hacés con él?**
@@ -28,6 +26,9 @@ La verdad es que casi siempre vendo todo antes de que llegue a vencerse, así qu
 
 **¿Y ese producto vencido queda en ese otro cuarto hasta cuándo?**
 Hasta que lo vienen a buscar para devolverlo al laboratorio. Mientras tanto queda separado ahí, aparte del stock que sí puedo usar.
+
+**Aunque te pase poco, ¿qué tan importante es para vos tener este tema bien controlado?**
+Para mí es de lo más importante, incluso más que otras cosas. Justamente porque me pasa poco es cuando más se me puede escapar: si no lo tengo controlado, capaz termino vendiéndole a un cliente algo vencido sin darme cuenta, o se me mezcla con lo bueno y pierdo la cuenta real de lo que tengo. Un producto vencido ya es plata perdida, y encima me juega en contra con el cliente. Así que, aunque no sea lo de todos los días, necesito que el sistema no me deje pasar ni un vencimiento por alto; para mí ese es el punto más delicado de todo el control de stock.
 
 ## 4. La solución: separar stock vigente y vencido
 
