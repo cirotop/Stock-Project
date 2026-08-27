@@ -62,5 +62,5 @@ Punto de venta / ventas, facturación, listas de precios, proveedores, clientes,
 ## 3. Requerimientos del Dominio
 
 - **RD-01** Los productos llegan en cajas, y todos los productos de una misma caja comparten la misma fecha de vencimiento.
-- **RD-02** El total de stock de un producto debe coincidir siempre con sus existencias físicas: es la suma de su stock vigente y su stock vencido. El stock vencido permanece físicamente separado en otro depósito del mismo edificio, pero se sigue contabilizando en el total.
+- **RD-02** El total de stock de un producto debe coincidir siempre con sus existencias físicas. El stock vigente y el stock vencido se registran en tablas separadas, y el total físico surge de la suma de ambos (stock vigente + stock vencido). El stock vencido permanece físicamente separado en otro depósito del mismo edificio, pero se sigue contabilizando dentro de ese total Es decir solo se trabaja con el stock vigente, el otro es solo para un conteo.
 - **RD-03** La mercadería vencida no se descuenta del stock mientras siga en el edificio; recién se descuenta cuando se retira para devolverla al laboratorio y se lee su etiqueta.
