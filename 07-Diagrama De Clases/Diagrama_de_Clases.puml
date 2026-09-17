@@ -1,0 +1,211 @@
+@startuml Diagrama_de_Clases
+' Diagrama de Clases - Stock Project
+' Basado en 04-Diccionario De Datos/Diccionario_de_Datos.md y 05-Caso De Uso/Casos_de_Uso.md
+' Las claves foráneas del modelo de datos se representan como asociaciones entre clases.
+
+skinparam shadowing false
+skinparam roundcorner 5
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FDFDFD
+  BorderColor #444444
+  ArrowColor #444444
+  HeaderBackgroundColor #DDE7F3
+}
+
+' ===================== Enumeraciones =====================
+
+enum TipoRol {
+  ADMINISTRADOR
+  EMPLEADO
+}
+
+enum EstadoVenta {
+  CONFIRMADA
+  ANULADA
+}
+
+enum MedioPago {
+  EFECTIVO
+  TARJETA
+  TRANSFERENCIA
+  CUENTA_CORRIENTE
+}
+
+' ===================== Seguridad =====================
+
+class Rol {
+  - idRol : int
+  - nombreRol : TipoRol
+  - descripcionRol : String
+  + getNombreRol() : TipoRol
+}
+
+class Usuario {
+  - idUsuario : int
+  - nombreUsuario : String
+  - contraseña : String
+  - nombreCompleto : String
+  + iniciarSesion(nombreUsuario : String, contraseña : String) : boolean
+  + esAdministrador() : boolean
+  + darAlta() : void
+  + modificar() : void
+  + darBaja() : void
+}
+
+' ===================== Catálogo =====================
+
+class Categoria {
+  - idCategoria : int
+  - nombreCategoria : String
+  - descripcionCategoria : String
+  + darAlta() : void
+  + modificar() : void
+}
+
+class Proveedor {
+  - idProveedor : int
+  - razonSocial : String
+  - cuit : String
+  - telefono : String
+  - email : String
+  - direccion : String
+  + darAlta() : void
+  + modificar() : void
+  + darBaja() : void
+}
+
+class Producto {
+  - idProducto : int
+  - codigoProducto : String
+  - nombreProducto : String
+  - descripcionProducto : String
+  - precioUnitario : decimal
+  - stockActual : int
+  - stockMinimo : int
+  - fechaVencimiento : Date
+  - estadoProducto : boolean
+  + darAlta() : void
+  + modificar() : void
+  + darBaja() : void
+  + modificarPrecio(nuevoPrecio : decimal) : void
+  + aumentarStock(cantidad : int) : void
+  + descontarStock(cantidad : int) : void
+  + ajustarStock(cantidadReal : int, motivo : String) : void
+  + tieneStockBajo() : boolean
+  + estaProximoAVencer(dias : int) : boolean
+  + hayStockSuficiente(cantidad : int) : boolean
+}
+
+class IngresoMercaderia {
+  - idIngreso : int
+  - cantidad : int
+  - fechaIngreso : Date
+  - fechaVencimiento : Date
+  - gastoTotalCompra : decimal
+  + registrar() : void
+}
+
+' ===================== Clientes =====================
+
+class Cliente {
+  - idCliente : int
+  - razonSocial : String
+  - telefono : String
+  - direccion : String
+  - email : String
+  - documento : String
+  - responsableInscripto : boolean
+  - estadoMoroso : boolean
+  - estadoCliente : boolean
+  + darAlta() : void
+  + modificar() : void
+  + darBaja() : void
+  + marcarMoroso() : void
+}
+
+class CuentaCorriente {
+  - idCuentaCorriente : int
+  - deudaTotal : decimal
+  - fechaLimitePago : Date
+  - interes : decimal
+  + cargarDeuda(monto : decimal) : void
+  + registrarPago(monto : decimal) : Pago
+  + aplicarInteres(interes : decimal) : void
+  + estaVencida() : boolean
+}
+
+class Pago {
+  - idPago : int
+  - fechaPago : Date
+  - montoPago : decimal
+}
+
+' ===================== Ventas =====================
+
+class Venta {
+  - idVenta : int
+  - fechaVenta : DateTime
+  - totalVenta : decimal
+  - estadoVenta : EstadoVenta
+  + agregarDetalle(producto : Producto, cantidad : int) : void
+  + agregarPago(medio : MedioPago, monto : decimal) : void
+  + calcularTotal() : decimal
+  + confirmar() : void
+  + anular() : void
+}
+
+class DetalleVenta {
+  - idDetalle : int
+  - cantidad : int
+  - precioUnitario : decimal
+  - subtotal : decimal
+  + calcularSubtotal() : decimal
+}
+
+class DetallePago {
+  - idDetallePago : int
+  - medioPago : MedioPago
+  - monto : decimal
+}
+
+' ===================== Caja =====================
+
+class CierreCaja {
+  - idCierreCaja : int
+  - fechaCierre : Date
+  - totalCalculado : decimal
+  - totalVerificado : decimal
+  - diferenciaCaja : decimal
+  - comentario : String
+  + calcularTotal() : decimal
+  + calcularDiferencia() : decimal
+  + cerrar(totalVerificado : decimal, comentario : String) : void
+}
+
+' ===================== Relaciones =====================
+
+Rol "1" -- "0..*" Usuario : asigna >
+Rol ..> TipoRol
+
+Usuario "1" -- "0..*" Venta : registra >
+Usuario "1" -- "0..*" CierreCaja : realiza >
+
+Categoria "1" -- "0..*" Producto : clasifica >
+Proveedor "1" -- "0..*" Producto : provee >
+Proveedor "1" -- "0..*" IngresoMercaderia : entrega >
+IngresoMercaderia "0..*" -- "1" Producto : ingresa >
+
+Cliente "1" *-- "0..1" CuentaCorriente : posee >
+CuentaCorriente "1" *-- "0..*" Pago : recibe >
+Cliente "0..1" -- "0..*" Venta : compra >
+
+Venta "1" *-- "1..*" DetalleVenta : contiene >
+DetalleVenta "0..*" --> "1" Producto : refiere a >
+Venta "1" *-- "1..*" DetallePago : se abona con >
+
+Venta ..> EstadoVenta
+DetallePago ..> MedioPago
+
+@enduml
