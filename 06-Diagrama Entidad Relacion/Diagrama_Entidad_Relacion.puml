@@ -1,0 +1,175 @@
+@startuml Diagrama_Entidad_Relacion
+' Diagrama Entidad-Relación - Stock Project
+' Generado a partir de 04-Diccionario De Datos/Diccionario_de_Datos.md
+
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam roundcorner 5
+skinparam class {
+  BackgroundColor #FDFDFD
+  BorderColor #444444
+  ArrowColor #444444
+  HeaderBackgroundColor #DDE7F3
+}
+
+' ===================== Seguridad =====================
+
+entity "Rol" as Rol {
+  * **idRol** : INT <<PK>>
+  --
+  * nombreRol : VARCHAR(20)  {Administrador | Empleado}
+    descripcionRol : VARCHAR(100)
+}
+
+entity "Usuario" as Usuario {
+  * **idUsuario** : INT <<PK>>
+  --
+  * nombreUsuario : VARCHAR(30) <<UNIQUE>>
+  * contraseña : VARCHAR(255)  (hash)
+  * nombreCompleto : VARCHAR(80)
+  * idRol : INT <<FK>>
+}
+
+' ===================== Catálogo =====================
+
+entity "Categoria" as Categoria {
+  * **idCategoria** : INT <<PK>>
+  --
+  * nombreCategoria : VARCHAR(50)
+    descripcionCategoria : VARCHAR(150)
+}
+
+entity "Proveedor" as Proveedor {
+  * **idProveedor** : INT <<PK>>
+  --
+  * razonSocial : VARCHAR(100)
+  * cuit : VARCHAR(13)
+    telefono : VARCHAR(30)
+    email : VARCHAR(80)
+    direccion : VARCHAR(120)
+}
+
+entity "Producto" as Producto {
+  * **idProducto** : INT <<PK>>
+  --
+  * codigoProducto : VARCHAR(30) <<UNIQUE>>
+  * nombreProducto : VARCHAR(100)
+    descripcionProducto : VARCHAR(200)
+  * idCategoria : INT <<FK>>
+  * idProveedor : INT <<FK>>
+  * precioUnitario : DECIMAL(12,2)
+  * stockActual : INT
+  * stockMinimo : INT
+    fechaVencimiento : DATE
+  * estadoProducto : BOOLEAN
+}
+
+entity "IngresoMercaderia" as IngresoMercaderia {
+  * **idIngreso** : INT <<PK>>
+  --
+  * idProducto : INT <<FK>>
+  * idProveedor : INT <<FK>>
+  * cantidad : INT
+  * fechaIngreso : DATE
+    fechaVencimiento : DATE
+  * gastoTotalCompra : DECIMAL(12,2)
+}
+
+' ===================== Clientes =====================
+
+entity "Cliente" as Cliente {
+  * **idCliente** : INT <<PK>>
+  --
+  * razonSocial : VARCHAR(100)
+    telefono : VARCHAR(30)
+    direccion : VARCHAR(120)
+    email : VARCHAR(80)
+    documento : VARCHAR(13)
+  * responsableInscripto : BOOLEAN
+  * estadoMoroso : BOOLEAN
+  * estadoCliente : BOOLEAN
+}
+
+entity "CuentaCorriente" as CuentaCorriente {
+  * **idCuentaCorriente** : INT <<PK>>
+  --
+  * idCliente : INT <<FK>> <<UNIQUE>>
+  * deudaTotal : DECIMAL(12,2)
+    fechaLimitePago : DATE
+    interes : DECIMAL(5,2)
+}
+
+entity "Pago" as Pago {
+  * **idPago** : INT <<PK>>
+  --
+  * idCuentaCorriente : INT <<FK>>
+  * fechaPago : DATE
+  * montoPago : DECIMAL(12,2)
+}
+
+' ===================== Ventas =====================
+
+entity "Venta" as Venta {
+  * **idVenta** : INT <<PK>>
+  --
+  * fechaVenta : DATETIME
+  * idUsuario : INT <<FK>>
+    idCliente : INT <<FK>>
+  * totalVenta : DECIMAL(12,2)
+  * estadoVenta : VARCHAR(15)  {confirmada | anulada}
+}
+
+entity "DetalleVenta" as DetalleVenta {
+  * **idDetalle** : INT <<PK>>
+  --
+  * idVenta : INT <<FK>>
+  * idProducto : INT <<FK>>
+  * cantidad : INT
+  * precioUnitario : DECIMAL(12,2)
+  * subtotal : DECIMAL(12,2)
+}
+
+entity "DetallePago" as DetallePago {
+  * **idDetallePago** : INT <<PK>>
+  --
+  * idVenta : INT <<FK>>
+  * medioPago : VARCHAR(20)  {efectivo | tarjeta | transferencia | cuenta corriente}
+  * monto : DECIMAL(12,2)
+}
+
+' ===================== Caja =====================
+
+entity "CierreCaja" as CierreCaja {
+  * **idCierreCaja** : INT <<PK>>
+  --
+  * fechaCierre : DATE
+  * totalCalculado : DECIMAL(12,2)
+  * totalVerificado : DECIMAL(12,2)
+  * diferenciaCaja : DECIMAL(12,2)
+    comentario : VARCHAR(200)
+  * idUsuario : INT <<FK>>
+}
+
+' ===================== Relaciones =====================
+' ||  = exactamente uno     |o = cero o uno
+' |{  = uno o muchos        o{ = cero o muchos
+
+Rol               ||--o{ Usuario           : "asigna"
+Usuario           ||--o{ Venta             : "registra"
+Usuario           ||--o{ CierreCaja        : "realiza"
+
+Categoria         ||--o{ Producto          : "clasifica"
+Proveedor         ||--o{ Producto          : "provee"
+Proveedor         ||--o{ IngresoMercaderia : "entrega"
+Producto          ||--o{ IngresoMercaderia : "ingresa"
+
+Cliente           ||--o| CuentaCorriente   : "posee"
+CuentaCorriente   ||--o{ Pago              : "recibe"
+Cliente           |o--o{ Venta             : "compra"
+
+Venta             ||--|{ DetalleVenta      : "contiene"
+Producto          ||--o{ DetalleVenta      : "se vende en"
+Venta             ||--|{ DetallePago       : "se abona con"
+
+@enduml
