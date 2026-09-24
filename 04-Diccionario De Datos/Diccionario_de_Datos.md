@@ -23,7 +23,7 @@ Flujos de datos en reposo. Cada uno se identifica por su clave natural (@):
 
     Rol = @nombreRol + (descripcionRol)
 
-    Usuario = @nombreUsuario + contraseña + nombreCompleto + nombreRol
+    Usuario = @nombreUsuario + contraseña + nombreCompleto + nombreRol + estadoUsuario
 
     Categoria = @nombreCategoria + (descripcionCategoria)
 
@@ -50,7 +50,8 @@ Transacciones que actualizan el stock. Se describen por su contenido (no llevan 
 Datos elementales cuyo valor se elige de un conjunto cerrado de alternativas:
 
     nombreRol = [ Administrador | Empleado ]
-    estado = [ activo | inactivo ]
+    estadoUsuario = [ activo | inactivo ]
+    estadoProducto = [ activo | inactivo ]
 
 ---
 
@@ -65,6 +66,7 @@ Mínimas unidades indivisibles de datos, con su nombre, descripción, longitud, 
 | nombreUsuario | Nombre de acceso al sistema (clave, único). | 30 | Alfanumérico | Texto libre |
 | contraseña | Contraseña almacenada cifrada (hash). | 255 | Alfanumérico | Texto libre |
 | nombreCompleto | Nombre y apellido del usuario. | 80 | Alfanumérico | Texto libre |
+| estadoUsuario | Estado del usuario (baja lógica). | 1 | Booleano | Discreto: {(1, activo); (0, inactivo)} |
 | nombreCategoria | Nombre de la categoría de producto (clave). | 50 | Alfanumérico | Texto libre |
 | descripcionCategoria | Descripción de la categoría. | 150 | Alfanumérico | Texto libre |
 | codigoProducto | Código interno o de barras del producto (clave). | 30 | Alfanumérico | Texto libre |

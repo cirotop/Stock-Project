@@ -37,6 +37,7 @@ class Usuario {
   - nombreUsuario : String  <<clave>>
   - contraseña : String
   - nombreCompleto : String
+  - estadoUsuario : boolean
   + iniciarSesion(nombreUsuario : String, contraseña : String) : boolean
   + esAdministrador() : boolean
   + darAlta() : void

@@ -32,6 +32,7 @@ entity "Usuario" as Usuario {
   * contraseña : VARCHAR(255)  (hash)
   * nombreCompleto : VARCHAR(80)
   * nombreRol : VARCHAR(20) <<FK>>
+  * estadoUsuario : BOOLEAN
 }
 
 ' ===================== Catálogo =====================
