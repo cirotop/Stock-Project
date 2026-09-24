@@ -1,6 +1,11 @@
 @startuml Diagrama_Entidad_Relacion
 ' Diagrama Entidad-Relación - Stock Project
-' Generado a partir de 04-Diccionario De Datos/Diccionario_de_Datos.md
+' Basado en 04-Diccionario De Datos/Diccionario_de_Datos.md (version de claves naturales),
+' 02-Requerimientos/Requerimientos_post 6ta entrevista.md y
+' 03-Reglas De Negocio/Reglas_de_Negocio_6ta_entrevista.md.
+' Alcance: solo control de stock. Fuera de alcance: ventas, facturacion, clientes,
+' cuenta corriente, medios de pago, proveedores, caja y listas de precios.
+' El diccionario no define IDs internos: cada entidad usa su clave natural como PK.
 
 hide circle
 skinparam linetype ortho
@@ -16,160 +21,100 @@ skinparam class {
 ' ===================== Seguridad =====================
 
 entity "Rol" as Rol {
-  * **idRol** : INT <<PK>>
+  * **nombreRol** : VARCHAR(20) <<PK>>  {Administrador | Empleado}
   --
-  * nombreRol : VARCHAR(20)  {Administrador | Empleado}
     descripcionRol : VARCHAR(100)
 }
 
 entity "Usuario" as Usuario {
-  * **idUsuario** : INT <<PK>>
+  * **nombreUsuario** : VARCHAR(30) <<PK>>
   --
-  * nombreUsuario : VARCHAR(30) <<UNIQUE>>
   * contraseña : VARCHAR(255)  (hash)
   * nombreCompleto : VARCHAR(80)
-  * idRol : INT <<FK>>
+  * nombreRol : VARCHAR(20) <<FK>>
 }
 
 ' ===================== Catálogo =====================
 
 entity "Categoria" as Categoria {
-  * **idCategoria** : INT <<PK>>
+  * **nombreCategoria** : VARCHAR(50) <<PK>>
   --
-  * nombreCategoria : VARCHAR(50)
     descripcionCategoria : VARCHAR(150)
 }
 
-entity "Proveedor" as Proveedor {
-  * **idProveedor** : INT <<PK>>
-  --
-  * razonSocial : VARCHAR(100)
-  * cuit : VARCHAR(13)
-    telefono : VARCHAR(30)
-    email : VARCHAR(80)
-    direccion : VARCHAR(120)
-}
-
 entity "Producto" as Producto {
-  * **idProducto** : INT <<PK>>
+  * **codigoProducto** : VARCHAR(30) <<PK>>
   --
-  * codigoProducto : VARCHAR(30) <<UNIQUE>>
   * nombreProducto : VARCHAR(100)
     descripcionProducto : VARCHAR(200)
-  * idCategoria : INT <<FK>>
-  * idProveedor : INT <<FK>>
-  * precioUnitario : DECIMAL(12,2)
-  * stockActual : INT
+  * nombreCategoria : VARCHAR(50) <<FK>>
+  * stockVigente : INT
   * stockMinimo : INT
     fechaVencimiento : DATE
   * estadoProducto : BOOLEAN
 }
 
-entity "IngresoMercaderia" as IngresoMercaderia {
-  * **idIngreso** : INT <<PK>>
+entity "StockVencido" as StockVencido {
+  * **codigoEtiqueta** : VARCHAR(30) <<PK>>
   --
-  * idProducto : INT <<FK>>
-  * idProveedor : INT <<FK>>
+  * codigoProducto : VARCHAR(30) <<FK>>
+  * cantidad : INT
+  * fechaVencimiento : DATE
+}
+
+' ===================== Movimientos de stock =====================
+' RN-07: cada movimiento guarda el usuario y la fecha.
+' RN-08: el stock solo cambia a traves de estos movimientos.
+
+entity "IngresoMercaderia" as IngresoMercaderia {
+  * codigoProducto : VARCHAR(30) <<FK>>
   * cantidad : INT
   * fechaIngreso : DATE
-    fechaVencimiento : DATE
-  * gastoTotalCompra : DECIMAL(12,2)
+  * fechaVencimiento : DATE
+  * nombreUsuario : VARCHAR(30) <<FK>>
 }
 
-' ===================== Clientes =====================
-
-entity "Cliente" as Cliente {
-  * **idCliente** : INT <<PK>>
-  --
-  * razonSocial : VARCHAR(100)
-    telefono : VARCHAR(30)
-    direccion : VARCHAR(120)
-    email : VARCHAR(80)
-    documento : VARCHAR(13)
-  * responsableInscripto : BOOLEAN
-  * estadoMoroso : BOOLEAN
-  * estadoCliente : BOOLEAN
+entity "AjusteStock" as AjusteStock {
+  * codigoProducto : VARCHAR(30) <<FK>>
+  * cantidadReal : INT
+  * motivo : VARCHAR(150)
+  * fechaAjuste : DATE
+  * nombreUsuario : VARCHAR(30) <<FK>>
 }
 
-entity "CuentaCorriente" as CuentaCorriente {
-  * **idCuentaCorriente** : INT <<PK>>
-  --
-  * idCliente : INT <<FK>> <<UNIQUE>>
-  * deudaTotal : DECIMAL(12,2)
-    fechaLimitePago : DATE
-    interes : DECIMAL(5,2)
-}
-
-entity "Pago" as Pago {
-  * **idPago** : INT <<PK>>
-  --
-  * idCuentaCorriente : INT <<FK>>
-  * fechaPago : DATE
-  * montoPago : DECIMAL(12,2)
-}
-
-' ===================== Ventas =====================
-
-entity "Venta" as Venta {
-  * **idVenta** : INT <<PK>>
-  --
-  * fechaVenta : DATETIME
-  * idUsuario : INT <<FK>>
-    idCliente : INT <<FK>>
-  * totalVenta : DECIMAL(12,2)
-  * estadoVenta : VARCHAR(15)  {confirmada | anulada}
-}
-
-entity "DetalleVenta" as DetalleVenta {
-  * **idDetalle** : INT <<PK>>
-  --
-  * idVenta : INT <<FK>>
-  * idProducto : INT <<FK>>
+entity "RetiroVencido" as RetiroVencido {
+  * codigoEtiqueta : VARCHAR(30) <<FK>>
   * cantidad : INT
-  * precioUnitario : DECIMAL(12,2)
-  * subtotal : DECIMAL(12,2)
-}
-
-entity "DetallePago" as DetallePago {
-  * **idDetallePago** : INT <<PK>>
-  --
-  * idVenta : INT <<FK>>
-  * medioPago : VARCHAR(20)  {efectivo | tarjeta | transferencia | cuenta corriente}
-  * monto : DECIMAL(12,2)
-}
-
-' ===================== Caja =====================
-
-entity "CierreCaja" as CierreCaja {
-  * **idCierreCaja** : INT <<PK>>
-  --
-  * fechaCierre : DATE
-  * totalCalculado : DECIMAL(12,2)
-  * totalVerificado : DECIMAL(12,2)
-  * diferenciaCaja : DECIMAL(12,2)
-    comentario : VARCHAR(200)
-  * idUsuario : INT <<FK>>
+  * fechaRetiro : DATE
+  * nombreUsuario : VARCHAR(30) <<FK>>
 }
 
 ' ===================== Relaciones =====================
 ' ||  = exactamente uno     |o = cero o uno
 ' |{  = uno o muchos        o{ = cero o muchos
 
-Rol               ||--o{ Usuario           : "asigna"
-Usuario           ||--o{ Venta             : "registra"
-Usuario           ||--o{ CierreCaja        : "realiza"
+Rol          ||--o{ Usuario            : "asigna"
 
-Categoria         ||--o{ Producto          : "clasifica"
-Proveedor         ||--o{ Producto          : "provee"
-Proveedor         ||--o{ IngresoMercaderia : "entrega"
-Producto          ||--o{ IngresoMercaderia : "ingresa"
+Categoria    ||--o{ Producto           : "clasifica"
+Producto     ||--o{ StockVencido       : "tiene vencido"
 
-Cliente           ||--o| CuentaCorriente   : "posee"
-CuentaCorriente   ||--o{ Pago              : "recibe"
-Cliente           |o--o{ Venta             : "compra"
+Producto     ||--o{ IngresoMercaderia  : "se incrementa por"
+Producto     ||--o{ AjusteStock        : "se corrige por"
+StockVencido ||--o{ RetiroVencido      : "se descuenta por"
 
-Venta             ||--|{ DetalleVenta      : "contiene"
-Producto          ||--o{ DetalleVenta      : "se vende en"
-Venta             ||--|{ DetallePago       : "se abona con"
+Usuario      ||--o{ IngresoMercaderia  : "registra"
+Usuario      ||--o{ AjusteStock        : "registra"
+Usuario      ||--o{ RetiroVencido      : "registra"
+
+note bottom of Producto
+  RN-19: stock total fisico =
+  stockVigente + suma(StockVencido.cantidad)
+end note
+
+note bottom of IngresoMercaderia
+  El diccionario define los movimientos sin clave propia.
+  Para implementarlos hace falta una clave subrogada
+  (nroIngreso, nroAjuste, nroRetiro) o una compuesta.
+end note
 
 @enduml
