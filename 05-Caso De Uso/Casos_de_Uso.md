@@ -102,7 +102,7 @@ b. Modificación: el Administrador busca una categoría, edita su nombre o descr
 1. El Administrador selecciona la opción de alta de producto.
 2. Ingresa el código, el nombre, la descripción, la categoría y el stock mínimo.
 3. El sistema valida que el código no esté repetido (RN-09).
-4. El sistema guarda el producto con stock vigente en cero y en estado activo.
+4. El sistema guarda el producto en estado activo y sin lotes asociados, por lo que su stock vigente arranca en cero.
 
 **Caminos alternativos:**
 3.a El código ya está registrado.
@@ -126,22 +126,24 @@ c. Baja: el Administrador busca un producto y lo da de baja (queda inactivo, no 
 **Camino básico:**
 1. El usuario selecciona la opción de ingreso de mercadería.
 2. Selecciona el producto (por código o nombre).
-3. Ingresa la cantidad recibida y la fecha de vencimiento impresa en la caja, que vale para todas las unidades que contiene (RN-04).
-4. El sistema suma la cantidad al stock vigente del producto y registra la fecha de vencimiento de esa caja (RN-14).
+3. Ingresa el número de lote impreso en la caja, la cantidad recibida y la fecha de vencimiento, que vale para todas las unidades del lote (RN-04).
+4. El sistema da de alta el lote con esa fecha de vencimiento y esa cantidad, asociado al producto (RN-14).
 5. El sistema registra el movimiento con el usuario y la fecha (RN-07).
-6. El sistema confirma la actualización.
+6. El sistema confirma la actualización y muestra el stock vigente del producto, que es la suma de sus lotes no vencidos.
 
 **Caminos alternativos:**
 2.a El producto no existe todavía.
 2.a.1 El sistema ofrece darlo de alta (CU-04) o cancelar la operación.
-3.a La cantidad es inválida (cero o negativa) o falta la fecha de vencimiento.
+3.a La cantidad es inválida (cero o negativa), falta el número de lote o falta la fecha de vencimiento.
 3.a.1 El sistema avisa que el dato no es válido o está incompleto y vuelve al paso 3.
-3.b La fecha de vencimiento ingresada ya pasó.
-3.b.1 El sistema avisa que la mercadería ya está vencida y pide confirmar antes de continuar.
+3.b El número de lote ya existe para ese producto.
+3.b.1 El sistema muestra el lote existente con su fecha de vencimiento y ofrece sumar la cantidad a ese lote o corregir el número ingresado.
+3.c La fecha de vencimiento ingresada ya pasó.
+3.c.1 El sistema avisa que la mercadería ya está vencida y pide confirmar antes de continuar.
 
-**Postcondiciones:** El stock vigente del producto queda incrementado, con la fecha de vencimiento de la caja registrada, y el movimiento queda asentado con su usuario y fecha.
+**Postcondiciones:** El lote queda registrado con su número, su cantidad y su fecha de vencimiento, el stock vigente del producto queda incrementado y el movimiento queda asentado con su usuario y fecha.
 
-**Escenario de éxito:** el stock vigente aumentó y quedó registrada la fecha de vencimiento.
+**Escenario de éxito:** el lote se dio de alta con su fecha de vencimiento y el stock vigente aumentó.
 **Escenario de fracaso:** no se registró el ingreso porque el producto no existía o los datos eran inválidos.
 
 ---
@@ -150,15 +152,15 @@ c. Baja: el Administrador busca un producto y lo da de baja (queda inactivo, no 
 
 **Actores:** Administrador (primario).
 
-**Precondiciones:** El Administrador debe estar logueado. El producto debe existir en el sistema. (El Empleado no tiene este permiso, RN-11.)
+**Precondiciones:** El Administrador debe estar logueado. El producto debe existir y tener al menos un lote cargado. (El Empleado no tiene este permiso, RN-11.)
 
 **Camino básico:**
 1. El Administrador selecciona el producto que necesita corregir.
-2. El sistema muestra el stock vigente registrado.
-3. El Administrador ingresa la cantidad real contada y el motivo del ajuste.
-4. El sistema corrige el stock vigente del producto con la cantidad indicada.
+2. El sistema muestra los lotes del producto con su número, su fecha de vencimiento y su cantidad registrada.
+3. El Administrador selecciona el lote a corregir, e ingresa la cantidad real contada y el motivo del ajuste.
+4. El sistema corrige la cantidad de ese lote con el valor indicado.
 5. El sistema registra el movimiento con el usuario y la fecha (RN-07).
-6. El sistema confirma el ajuste.
+6. El sistema confirma el ajuste y recalcula el stock vigente del producto.
 
 **Caminos alternativos:**
 3.a La cantidad es inválida (negativa) o falta el motivo.
@@ -232,13 +234,13 @@ c. Baja: el Administrador busca un producto y lo da de baja (queda inactivo, no 
 
 **Camino básico:**
 1. El usuario accede al panel de vencimientos.
-2. El sistema muestra los productos que están a 15 días o menos de su fecha de vencimiento (RN-17).
-3. El sistema muestra los lotes de stock vencido pendientes de retiro, con su etiqueta, su producto, su cantidad y su fecha de vencimiento.
+2. El sistema muestra los lotes que están a 15 días o menos de su fecha de vencimiento, con su número de lote, su producto, su cantidad y su fecha (RN-17).
+3. El sistema muestra los lotes de stock vencido pendientes de retiro, con su etiqueta, su número de lote, su producto, su cantidad y su fecha de vencimiento.
 4. Para cada producto, el sistema muestra su stock vigente, su stock vencido y el stock total físico, que es la suma de ambos (RN-19).
 
 **Caminos alternativos:**
-2.a No hay productos próximos a vencer.
-2.a.1 El sistema informa que no hay productos por vencer.
+2.a No hay lotes próximos a vencer.
+2.a.1 El sistema informa que no hay lotes por vencer.
 3.a No hay lotes vencidos pendientes de retiro.
 3.a.1 El sistema informa que no hay mercadería vencida en el depósito.
 
@@ -253,6 +255,6 @@ c. Baja: el Administrador busca un producto y lo da de baja (queda inactivo, no 
 
 Comportamientos que el sistema ejecuta por sí mismo, sin que los inicie un actor, y que por eso no se documentan como casos de uso:
 
-- **Vencimiento del stock (RN-15 y RN-21):** cuando un producto alcanza su fecha de vencimiento, el sistema traslada su stock vigente a un registro de stock vencido, identificado por el código de su etiqueta. Ese stock deja de ser operativo pero se sigue contando dentro del stock total físico hasta su retiro (CU-07).
+- **Vencimiento del stock (RN-15 y RN-21):** cuando un **lote** alcanza su fecha de vencimiento, el sistema traslada su cantidad a un registro de stock vencido, identificado por el código de la etiqueta que se le coloca a la caja. Ese stock deja de ser operativo pero se sigue contando dentro del stock total físico hasta su retiro (CU-07). Los demás lotes del mismo producto, con otras fechas de vencimiento, siguen vigentes.
 - **Alerta de stock bajo (RN-16):** cuando el stock vigente de un producto queda en o por debajo de su mínimo, el sistema lo marca en el listado de stock bajo (CU-08).
 - **Alerta de vencimiento (RN-17):** cuando un producto está próximo a vencer o ya venció, el sistema lo marca en el listado de vencimientos (CU-09).

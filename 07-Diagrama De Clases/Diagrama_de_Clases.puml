@@ -10,6 +10,8 @@
 ' Cada operacion declara sus datos de entrada (parametros) y de salida (tipo de retorno).
 ' Las acciones de gestion (quien crea, modifica o da de baja) son operaciones de Usuario,
 ' que valida el permiso del rol con esAdministrador() segun la RN-11.
+' El vencimiento se maneja por LOTE: cada caja ingresa con su numero de lote y a ese
+' lote se le asigna la fecha de vencimiento impresa (RN-03, RN-04).
 
 skinparam shadowing false
 skinparam roundcorner 5
@@ -67,12 +69,12 @@ class Usuario {
   + modificarProducto(producto : Producto, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : void
   + darBajaProducto(producto : Producto) : void
   .. Movimientos de stock (CU-05, CU-06, CU-07) ..
-  + registrarIngreso(producto : Producto, cantidad : int, fechaVencimiento : Date) : IngresoMercaderia
-  + ajustarStock(producto : Producto, cantidadReal : int, motivo : String) : AjusteStock
+  + registrarIngreso(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date) : IngresoMercaderia
+  + ajustarStock(lote : Lote, cantidadReal : int, motivo : String) : AjusteStock
   + registrarRetiroVencido(lote : StockVencido, cantidad : int) : RetiroVencido
   .. Consultas (CU-08, CU-09) ..
   + consultarStockBajo() : Producto[]
-  + consultarProximosAVencer(dias : int) : Producto[]
+  + consultarLotesProximosAVencer(dias : int) : Lote[]
   + consultarLotesVencidos() : StockVencido[]
 }
 
@@ -91,34 +93,45 @@ class Producto {
   - codigoProducto : String  <<clave>>
   - nombreProducto : String
   - descripcionProducto : String
-  - stockVigente : int
   - stockMinimo : int
-  - fechaVencimiento : Date
   - estadoProducto : boolean
   --
   + actualizarDatos(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : void
   + desactivar() : void
-  + aumentarStockVigente(cantidad : int, fechaVencimiento : Date) : int
-  + corregirStockVigente(cantidadReal : int) : int
-  + vencerStock(codigoEtiqueta : String) : StockVencido
+  + agregarLote(nroLote : String, cantidad : int, fechaVencimiento : Date) : Lote
+  + buscarLote(nroLote : String) : Lote
   + tieneStockBajo() : boolean
-  + estaProximoAVencer(dias : int) : boolean
-  + estaVencido(fecha : Date) : boolean
   + estaActivo() : boolean
+  + getLotesVigentes() : Lote[]
+  + getLotesProximosAVencer(dias : int) : Lote[]
   + getStockVigente() : int
   + getStockVencido() : int
   + getStockTotalFisico() : int
 }
 
+class Lote {
+  - nroLote : String  <<clave>>
+  - fechaVencimiento : Date
+  - cantidadLote : int
+  --
+  + aumentarCantidad(cantidad : int) : int
+  + corregirCantidad(cantidadReal : int) : int
+  + vencer(codigoEtiqueta : String) : StockVencido
+  + estaVencido(fecha : Date) : boolean
+  + estaProximoAVencer(dias : int) : boolean
+  + getCantidadLote() : int
+  + getFechaVencimiento() : Date
+  + getProducto() : Producto
+}
+
 class StockVencido {
   - codigoEtiqueta : String  <<clave>>
   - cantidad : int
-  - fechaVencimiento : Date
   --
   + descontar(cantidad : int) : int
   + estaRetirado() : boolean
   + getCantidad() : int
-  + getProducto() : Producto
+  + getLote() : Lote
 }
 
 ' ===================== Movimientos de stock =====================
@@ -135,7 +148,6 @@ abstract class MovimientoStock {
 
 class IngresoMercaderia {
   - cantidad : int
-  - fechaVencimiento : Date
   --
   + aplicar() : boolean
   + getCantidad() : int
@@ -162,7 +174,8 @@ Rol "1" -- "0..*" Usuario : asigna >
 Rol ..> TipoRol
 
 Categoria "1" -- "0..*" Producto : clasifica >
-Producto "1" -- "0..*" StockVencido : tiene vencido >
+Producto "1" *-- "0..*" Lote : se agrupa en >
+Lote "1" -- "0..*" StockVencido : vence en >
 
 MovimientoStock <|-- IngresoMercaderia
 MovimientoStock <|-- AjusteStock
@@ -170,8 +183,8 @@ MovimientoStock <|-- RetiroVencido
 
 Usuario "1" -- "0..*" MovimientoStock : registra >
 
-IngresoMercaderia "0..*" --> "1" Producto : incrementa >
-AjusteStock "0..*" --> "1" Producto : corrige >
+IngresoMercaderia "0..*" --> "1" Lote : crea >
+AjusteStock "0..*" --> "1" Lote : corrige >
 RetiroVencido "0..*" --> "1" StockVencido : descuenta >
 
 ' Dependencias: Usuario es quien crea las instancias (acciones de gestion)
@@ -188,14 +201,17 @@ note bottom of Usuario
 end note
 
 note bottom of Producto
-  RN-19: stock total fisico =
-  stockVigente + suma(StockVencido.cantidad)
+  Datos derivados de los lotes:
+  stockVigente = suma de cantidadLote de los lotes no vencidos
+  stockVencido = suma de cantidad de sus StockVencido
+  stockTotalFisico = stockVigente + stockVencido   (RN-19)
 end note
 
-note bottom of StockVencido
-  RN-13 / RN-18: el lote vencido sigue contando
-  mientras este en el edificio; se descuenta
-  al leer su etiqueta en el retiro.
+note bottom of Lote
+  RN-04: todas las unidades del lote comparten
+  la fecha de vencimiento impresa en la caja.
+  RN-15: al vencer, su cantidad pasa a StockVencido
+  con el codigo de etiqueta que se lee al retirarlo.
 end note
 
 @enduml
