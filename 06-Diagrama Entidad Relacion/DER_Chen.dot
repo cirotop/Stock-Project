@@ -1,0 +1,100 @@
+// https://edotor.net
+
+graph DER_Chen {
+  graph [charset="UTF-8", overlap=false, splines=true, nodesep=0.45, ranksep=0.75, fontname="Helvetica"];
+  node  [fontname="Helvetica", fontsize=11];
+  edge  [fontname="Helvetica", fontsize=10, len=1.6];
+
+  // ============ Entidades ============
+  node [shape=box, style=filled, fillcolor="#DDE7F3", color="#444444", width=1.4, height=0.6];
+  Rol           [label="Rol"];
+  Usuario       [label="Usuario"];
+  Categoria     [label="Categoria"];
+  Producto      [label="Producto"];
+  StockVencido  [label="StockVencido"];
+
+  // ============ Relaciones ============
+  node [shape=diamond, style=filled, fillcolor="#F3E9DD", color="#444444", width=1.5, height=0.9];
+  R_Asigna    [label="Asigna"];
+  R_Clasifica [label="Clasifica"];
+  R_Tiene     [label="Tiene"];
+  R_Ingresa   [label="Ingresa"];
+  R_Ajusta    [label="Ajusta"];
+  R_Retira    [label="Retira"];
+
+  // ============ Atributos ============
+  node [shape=ellipse, style=filled, fillcolor="#FDFDFD", color="#444444", width=0.9, height=0.45];
+
+  // -- Rol --
+  A_nombreRol      [label=<<U>nombreRol</U>>];
+  A_descripcionRol [label="descripcionRol"];
+
+  // -- Usuario --
+  A_nombreUsuario  [label=<<U>nombreUsuario</U>>];
+  A_contrasena     [label="contraseña"];
+  A_nombreCompleto [label="nombreCompleto"];
+  A_estadoUsuario  [label="estadoUsuario"];
+
+  // -- Categoria --
+  A_nombreCategoria      [label=<<U>nombreCategoria</U>>];
+  A_descripcionCategoria [label="descripcionCategoria"];
+
+  // -- Producto --
+  A_codigoProducto      [label=<<U>codigoProducto</U>>];
+  A_nombreProducto      [label="nombreProducto"];
+  A_descripcionProducto [label="descripcionProducto"];
+  A_stockVigente        [label="stockVigente"];
+  A_stockMinimo         [label="stockMinimo"];
+  A_fechaVenc           [label="fechaVencimiento"];
+  A_estadoProducto      [label="estadoProducto"];
+  A_stockTotal          [label="stockTotalFisico", style="filled,dashed", fillcolor="#F7F7F7"];
+
+  // -- StockVencido --
+  A_codigoEtiqueta  [label=<<U>codigoEtiqueta</U>>];
+  A_cantidadLote    [label="cantidad"];
+  A_fechaVencLote   [label="fechaVencimiento"];
+
+  // -- Atributos de las relaciones (movimientos de stock) --
+  A_cantIngreso  [label="cantidad"];
+  A_fechaIngreso [label="fechaIngreso"];
+  A_fechaVencIng [label="fechaVencimiento"];
+  A_cantidadReal [label="cantidadReal"];
+  A_motivo       [label="motivo"];
+  A_fechaAjuste  [label="fechaAjuste"];
+  A_cantRetiro   [label="cantidad"];
+  A_fechaRetiro  [label="fechaRetiro"];
+
+  // ============ Union de atributos con su entidad/relacion ============
+  edge [len=1.0];
+  Rol -- {A_nombreRol A_descripcionRol};
+  Usuario -- {A_nombreUsuario A_contrasena A_nombreCompleto A_estadoUsuario};
+  Categoria -- {A_nombreCategoria A_descripcionCategoria};
+  Producto -- {A_codigoProducto A_nombreProducto A_descripcionProducto A_stockVigente A_stockMinimo A_fechaVenc A_estadoProducto};
+  Producto -- A_stockTotal [style=dashed];
+  StockVencido -- {A_codigoEtiqueta A_cantidadLote A_fechaVencLote};
+
+  R_Ingresa -- {A_cantIngreso A_fechaIngreso A_fechaVencIng};
+  R_Ajusta  -- {A_cantidadReal A_motivo A_fechaAjuste};
+  R_Retira  -- {A_cantRetiro A_fechaRetiro};
+
+  // ============ Entidad -- Relacion -- Entidad (con cardinalidad) ============
+  edge [len=2.0, penwidth=1.3];
+
+  Rol          -- R_Asigna    [label="1"];
+  R_Asigna     -- Usuario     [label="N"];
+
+  Categoria    -- R_Clasifica [label="1"];
+  R_Clasifica  -- Producto    [label="N"];
+
+  Producto     -- R_Tiene     [label="1"];
+  R_Tiene      -- StockVencido[label="N"];
+
+  Usuario      -- R_Ingresa   [label="N"];
+  R_Ingresa    -- Producto    [label="M"];
+
+  Usuario      -- R_Ajusta    [label="N"];
+  R_Ajusta     -- Producto    [label="M"];
+
+  Usuario      -- R_Retira    [label="N"];
+  R_Retira     -- StockVencido[label="M"];
+}
