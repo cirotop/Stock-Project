@@ -8,8 +8,9 @@
 ' cuenta corriente, medios de pago, proveedores, caja y listas de precios.
 ' El diccionario no define IDs internos: cada clase se identifica por su clave natural.
 ' Cada operacion declara sus datos de entrada (parametros) y de salida (tipo de retorno).
-' Las acciones de gestion (quien crea, modifica o da de baja) son operaciones de Usuario,
-' que valida el permiso del rol con esAdministrador() segun la RN-11.
+' Cada clase es responsable de sus propios datos: el alta es una operacion de clase
+' (subrayada, {static}) de la clase que se crea, y recibe el usuario que la ejecuta.
+' Usuario solo conserva lo suyo: sesion, permisos y estado.
 ' El vencimiento se maneja por LOTE: cada caja ingresa con su numero de lote y a ese
 ' lote se le asigna la fecha de vencimiento impresa (RN-03, RN-04).
 
@@ -37,9 +38,9 @@ class Rol {
   - nombreRol : TipoRol  <<clave>>
   - descripcionRol : String
   --
-  + actualizarDescripcion(descripcionRol : String) : void
+  + {static} crear(nombreRol : TipoRol, descripcionRol : String, usuario : Usuario) : Rol
+  + modificar(descripcionRol : String) : void
   + getNombreRol() : TipoRol
-  + getDescripcionRol() : String
   + tienePermisoTotal() : boolean
 }
 
@@ -49,33 +50,14 @@ class Usuario {
   - nombreCompleto : String
   - estadoUsuario : boolean
   --
-  .. Sesion (CU-01) ..
-  + iniciarSesion(nombreUsuario : String, contraseña : String) : boolean
+  + {static} crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, usuario : Usuario) : Usuario
+  + modificar(nombreCompleto : String, rol : Rol) : void
+  + darBaja() : void
+  + iniciarSesion(contraseña : String) : boolean
   + cerrarSesion() : void
   + cambiarContraseña(contraseñaActual : String, contraseñaNueva : String) : boolean
   + esAdministrador() : boolean
   + estaActivo() : boolean
-  + getNombreUsuario() : String
-  .. Gestion de roles y usuarios (CU-02) ..
-  + crearRol(nombreRol : TipoRol, descripcionRol : String) : Rol
-  + modificarRol(rol : Rol, descripcionRol : String) : void
-  + crearUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol) : Usuario
-  + modificarUsuario(usuario : Usuario, nombreCompleto : String, rol : Rol) : void
-  + darBajaUsuario(usuario : Usuario) : void
-  .. Gestion del catalogo (CU-03, CU-04) ..
-  + crearCategoria(nombreCategoria : String, descripcionCategoria : String) : Categoria
-  + modificarCategoria(categoria : Categoria, nombreCategoria : String, descripcionCategoria : String) : void
-  + crearProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : Producto
-  + modificarProducto(producto : Producto, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : void
-  + darBajaProducto(producto : Producto) : void
-  .. Movimientos de stock (CU-05, CU-06, CU-07) ..
-  + registrarIngreso(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date) : IngresoMercaderia
-  + ajustarStock(lote : Lote, cantidadReal : int, motivo : String) : AjusteStock
-  + registrarRetiroVencido(lote : StockVencido, cantidad : int) : RetiroVencido
-  .. Consultas (CU-08, CU-09) ..
-  + consultarStockBajo() : Producto[]
-  + consultarLotesProximosAVencer(dias : int) : Lote[]
-  + consultarLotesVencidos() : StockVencido[]
 }
 
 ' ===================== Catálogo =====================
@@ -84,8 +66,8 @@ class Categoria {
   - nombreCategoria : String  <<clave>>
   - descripcionCategoria : String
   --
-  + actualizarDatos(nombreCategoria : String, descripcionCategoria : String) : void
-  + getNombreCategoria() : String
+  + {static} crear(nombreCategoria : String, descripcionCategoria : String, usuario : Usuario) : Categoria
+  + modificar(nombreCategoria : String, descripcionCategoria : String) : void
   + listarProductos() : Producto[]
 }
 
@@ -96,9 +78,9 @@ class Producto {
   - stockMinimo : int
   - estadoProducto : boolean
   --
-  + actualizarDatos(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : void
-  + desactivar() : void
-  + agregarLote(nroLote : String, cantidad : int, fechaVencimiento : Date) : Lote
+  + {static} crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, usuario : Usuario) : Producto
+  + modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : void
+  + darBaja() : void
   + buscarLote(nroLote : String) : Lote
   + tieneStockBajo() : boolean
   + estaActivo() : boolean
@@ -114,13 +96,13 @@ class Lote {
   - fechaVencimiento : Date
   - cantidadLote : int
   --
+  + {static} crear(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date) : Lote
   + aumentarCantidad(cantidad : int) : int
   + corregirCantidad(cantidadReal : int) : int
   + vencer(codigoEtiqueta : String) : StockVencido
   + estaVencido(fecha : Date) : boolean
   + estaProximoAVencer(dias : int) : boolean
   + getCantidadLote() : int
-  + getFechaVencimiento() : Date
   + getProducto() : Producto
 }
 
@@ -149,6 +131,7 @@ abstract class MovimientoStock {
 class IngresoMercaderia {
   - cantidad : int
   --
+  + {static} registrar(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, usuario : Usuario) : IngresoMercaderia
   + aplicar() : boolean
   + getCantidad() : int
 }
@@ -157,6 +140,7 @@ class AjusteStock {
   - cantidadReal : int
   - motivo : String
   --
+  + {static} registrar(lote : Lote, cantidadReal : int, motivo : String, usuario : Usuario) : AjusteStock
   + aplicar() : boolean
   + getMotivo() : String
 }
@@ -164,6 +148,7 @@ class AjusteStock {
 class RetiroVencido {
   - cantidad : int
   --
+  + {static} registrar(lote : StockVencido, cantidad : int, usuario : Usuario) : RetiroVencido
   + aplicar() : boolean
   + getCantidad() : int
 }
@@ -187,17 +172,14 @@ IngresoMercaderia "0..*" --> "1" Lote : crea >
 AjusteStock "0..*" --> "1" Lote : corrige >
 RetiroVencido "0..*" --> "1" StockVencido : descuenta >
 
-' Dependencias: Usuario es quien crea las instancias (acciones de gestion)
-Usuario ..> Rol : <<create>>
-Usuario ..> Categoria : <<create>>
-Usuario ..> Producto : <<create>>
-
 note bottom of Usuario
-  RN-11: crearRol, crearUsuario, crearCategoria,
-  crearProducto, sus modificaciones, las bajas y
-  ajustarStock son exclusivos del Administrador.
-  registrarIngreso, registrarRetiroVencido y las
-  consultas los puede ejecutar tambien el Empleado.
+  RN-11: el alta, la modificacion y la baja de
+  roles, usuarios, categorias y productos, y el
+  ajuste de stock, exigen un usuario Administrador.
+  Cada operacion lo verifica con esAdministrador()
+  sobre el usuario que recibe como parametro.
+  El ingreso, el retiro de vencidos y las consultas
+  los puede ejecutar tambien el Empleado.
 end note
 
 note bottom of Producto
