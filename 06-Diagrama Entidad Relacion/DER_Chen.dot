@@ -1,4 +1,8 @@
 // https://edotor.net
+//
+// Diagrama Entidad-Relacion - Notacion de Chen - Stock Project
+// [rectangulo] = entidad   <rombo> = relacion (sin atributos)   (elipse) = atributo
+// atributo subrayado = clave    elipse punteada = atributo derivado
 
 graph DER_Chen {
   graph [charset="UTF-8", overlap=false, splines=true, nodesep=0.45, ranksep=0.75, fontname="Helvetica"];
@@ -13,14 +17,23 @@ graph DER_Chen {
   Producto      [label="Producto"];
   StockVencido  [label="StockVencido"];
 
-  // ============ Relaciones ============
+  // Los movimientos de stock son entidades, no relaciones:
+  // de ese modo las relaciones quedan sin atributos.
+  IngresoMercaderia [label="IngresoMercaderia"];
+  AjusteStock       [label="AjusteStock"];
+  RetiroVencido     [label="RetiroVencido"];
+
+  // ============ Relaciones (sin atributos) ============
   node [shape=diamond, style=filled, fillcolor="#F3E9DD", color="#444444", width=1.5, height=0.9];
-  R_Asigna    [label="Asigna"];
-  R_Clasifica [label="Clasifica"];
-  R_Tiene     [label="Tiene"];
-  R_Ingresa   [label="Ingresa"];
-  R_Ajusta    [label="Ajusta"];
-  R_Retira    [label="Retira"];
+  R_Asigna     [label="Asigna"];
+  R_Clasifica  [label="Clasifica"];
+  R_Tiene      [label="Tiene"];
+  R_Registra   [label="Registra"];
+  R_Incrementa [label="Incrementa"];
+  R_Realiza    [label="Realiza"];
+  R_Corrige    [label="Corrige"];
+  R_Efectua    [label="Efectua"];
+  R_Descuenta  [label="Descuenta"];
 
   // ============ Atributos ============
   node [shape=ellipse, style=filled, fillcolor="#FDFDFD", color="#444444", width=0.9, height=0.45];
@@ -54,17 +67,24 @@ graph DER_Chen {
   A_cantidadLote    [label="cantidad"];
   A_fechaVencLote   [label="fechaVencimiento"];
 
-  // -- Atributos de las relaciones (movimientos de stock) --
+  // -- IngresoMercaderia --
+  A_nroIngreso   [label=<<U>nroIngreso</U>>];
   A_cantIngreso  [label="cantidad"];
   A_fechaIngreso [label="fechaIngreso"];
   A_fechaVencIng [label="fechaVencimiento"];
+
+  // -- AjusteStock --
+  A_nroAjuste    [label=<<U>nroAjuste</U>>];
   A_cantidadReal [label="cantidadReal"];
   A_motivo       [label="motivo"];
   A_fechaAjuste  [label="fechaAjuste"];
-  A_cantRetiro   [label="cantidad"];
-  A_fechaRetiro  [label="fechaRetiro"];
 
-  // ============ Union de atributos con su entidad/relacion ============
+  // -- RetiroVencido --
+  A_nroRetiro   [label=<<U>nroRetiro</U>>];
+  A_cantRetiro  [label="cantidad"];
+  A_fechaRetiro [label="fechaRetiro"];
+
+  // ============ Union de cada atributo con su entidad ============
   edge [len=1.0];
   Rol -- {A_nombreRol A_descripcionRol};
   Usuario -- {A_nombreUsuario A_contrasena A_nombreCompleto A_estadoUsuario};
@@ -73,28 +93,37 @@ graph DER_Chen {
   Producto -- A_stockTotal [style=dashed];
   StockVencido -- {A_codigoEtiqueta A_cantidadLote A_fechaVencLote};
 
-  R_Ingresa -- {A_cantIngreso A_fechaIngreso A_fechaVencIng};
-  R_Ajusta  -- {A_cantidadReal A_motivo A_fechaAjuste};
-  R_Retira  -- {A_cantRetiro A_fechaRetiro};
+  IngresoMercaderia -- {A_nroIngreso A_cantIngreso A_fechaIngreso A_fechaVencIng};
+  AjusteStock       -- {A_nroAjuste A_cantidadReal A_motivo A_fechaAjuste};
+  RetiroVencido     -- {A_nroRetiro A_cantRetiro A_fechaRetiro};
 
   // ============ Entidad -- Relacion -- Entidad (con cardinalidad) ============
   edge [len=2.0, penwidth=1.3];
 
-  Rol          -- R_Asigna    [label="1"];
-  R_Asigna     -- Usuario     [label="N"];
+  Rol       -- R_Asigna    [label="1"];
+  R_Asigna  -- Usuario     [label="N"];
 
-  Categoria    -- R_Clasifica [label="1"];
-  R_Clasifica  -- Producto    [label="N"];
+  Categoria   -- R_Clasifica [label="1"];
+  R_Clasifica -- Producto    [label="N"];
 
-  Producto     -- R_Tiene     [label="1"];
-  R_Tiene      -- StockVencido[label="N"];
+  Producto -- R_Tiene      [label="1"];
+  R_Tiene  -- StockVencido [label="N"];
 
-  Usuario      -- R_Ingresa   [label="N"];
-  R_Ingresa    -- Producto    [label="M"];
+  // Ingreso de mercaderia
+  Usuario           -- R_Registra        [label="1"];
+  R_Registra        -- IngresoMercaderia [label="N"];
+  IngresoMercaderia -- R_Incrementa      [label="N"];
+  R_Incrementa      -- Producto          [label="1"];
 
-  Usuario      -- R_Ajusta    [label="N"];
-  R_Ajusta     -- Producto    [label="M"];
+  // Ajuste de stock
+  Usuario     -- R_Realiza   [label="1"];
+  R_Realiza   -- AjusteStock [label="N"];
+  AjusteStock -- R_Corrige   [label="N"];
+  R_Corrige   -- Producto    [label="1"];
 
-  Usuario      -- R_Retira    [label="N"];
-  R_Retira     -- StockVencido[label="M"];
+  // Retiro de mercaderia vencida
+  Usuario       -- R_Efectua      [label="1"];
+  R_Efectua     -- RetiroVencido  [label="N"];
+  RetiroVencido -- R_Descuenta    [label="N"];
+  R_Descuenta   -- StockVencido   [label="1"];
 }
