@@ -38,7 +38,7 @@ class Rol {
   - nombreRol : TipoRol  <<clave>>
   - descripcionRol : String
   --
-  + {static} crear(nombreRol : TipoRol, descripcionRol : String, usuario : Usuario) : Rol
+  + {static} crear(nombreRol : TipoRol, descripcionRol : String, responsable : Usuario) : Rol
   + modificar(descripcionRol : String) : void
   + getNombreRol() : TipoRol
   + tienePermisoTotal() : boolean
@@ -50,14 +50,15 @@ class Usuario {
   - nombreCompleto : String
   - estadoUsuario : boolean
   --
-  + {static} crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, usuario : Usuario) : Usuario
+  + {static} crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, responsable : Usuario) : Usuario
+  + {static} autenticar(nombreUsuario : String, contraseña : String) : Usuario
   + modificar(nombreCompleto : String, rol : Rol) : void
   + darBaja() : void
-  + iniciarSesion(contraseña : String) : boolean
   + cerrarSesion() : void
   + cambiarContraseña(contraseñaActual : String, contraseñaNueva : String) : boolean
   + esAdministrador() : boolean
   + estaActivo() : boolean
+  + getNombreUsuario() : String
 }
 
 ' ===================== Catálogo =====================
@@ -66,7 +67,7 @@ class Categoria {
   - nombreCategoria : String  <<clave>>
   - descripcionCategoria : String
   --
-  + {static} crear(nombreCategoria : String, descripcionCategoria : String, usuario : Usuario) : Categoria
+  + {static} crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario) : Categoria
   + modificar(nombreCategoria : String, descripcionCategoria : String) : void
   + listarProductos() : Producto[]
 }
@@ -78,7 +79,7 @@ class Producto {
   - stockMinimo : int
   - estadoProducto : boolean
   --
-  + {static} crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, usuario : Usuario) : Producto
+  + {static} crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, responsable : Usuario) : Producto
   + modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : void
   + darBaja() : void
   + buscarLote(nroLote : String) : Lote
@@ -103,6 +104,7 @@ class Lote {
   + estaVencido(fecha : Date) : boolean
   + estaProximoAVencer(dias : int) : boolean
   + getCantidadLote() : int
+  + getFechaVencimiento() : Date
   + getProducto() : Producto
 }
 
@@ -131,7 +133,7 @@ abstract class MovimientoStock {
 class IngresoMercaderia {
   - cantidad : int
   --
-  + {static} registrar(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, usuario : Usuario) : IngresoMercaderia
+  + {static} registrar(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario) : IngresoMercaderia
   + aplicar() : boolean
   + getCantidad() : int
 }
@@ -140,7 +142,7 @@ class AjusteStock {
   - cantidadReal : int
   - motivo : String
   --
-  + {static} registrar(lote : Lote, cantidadReal : int, motivo : String, usuario : Usuario) : AjusteStock
+  + {static} registrar(lote : Lote, cantidadReal : int, motivo : String, responsable : Usuario) : AjusteStock
   + aplicar() : boolean
   + getMotivo() : String
 }
@@ -148,7 +150,7 @@ class AjusteStock {
 class RetiroVencido {
   - cantidad : int
   --
-  + {static} registrar(lote : StockVencido, cantidad : int, usuario : Usuario) : RetiroVencido
+  + {static} registrar(loteVencido : StockVencido, cantidad : int, responsable : Usuario) : RetiroVencido
   + aplicar() : boolean
   + getCantidad() : int
 }
@@ -160,7 +162,7 @@ Rol ..> TipoRol
 
 Categoria "1" -- "0..*" Producto : clasifica >
 Producto "1" *-- "0..*" Lote : se agrupa en >
-Lote "1" -- "0..*" StockVencido : vence en >
+Lote "1" -- "0..1" StockVencido : vence en >
 
 MovimientoStock <|-- IngresoMercaderia
 MovimientoStock <|-- AjusteStock
