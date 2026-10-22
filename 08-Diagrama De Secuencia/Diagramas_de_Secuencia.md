@@ -1,7 +1,6 @@
 # Diagramas de Secuencia - Stock Proyect
 
-Un diagrama por caso de uso. Cada bloque se pega por separado en Mermaid (mermaid.live).
-Participantes: actor, Interfaz (pantalla), Controlador (lógica del sistema) y Base de Datos.
+
 
 ---
 
