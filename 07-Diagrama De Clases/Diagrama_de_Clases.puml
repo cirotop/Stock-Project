@@ -63,6 +63,18 @@ class Usuario {
 }
 
 ' ===================== Catálogo =====================
+' El Catalogo es la raiz que agrupa categorias y productos y resuelve las
+' consultas/listados del inventario (buscar, stock bajo, vencimientos). Asi un
+' Producto solo conserva sus propios datos y no se encarga de juntar ni contar.
+
+class Catalogo {
+  --
+  + buscarProducto(codigoProducto : String) : Producto
+  + listarProductos() : Producto[]
+  + listarStockBajo() : Producto[]
+  + listarProximosAVencer(dias : int) : Lote[]
+  + listarVencidos() : StockVencido[]
+}
 
 class Categoria {
   - nombreCategoria : String  <<clave>>
@@ -86,8 +98,6 @@ class Producto {
   + buscarLote(nroLote : String) : Lote
   + tieneStockBajo() : boolean
   + estaActivo() : boolean
-  + getLotesVigentes() : Lote[]
-  + getStockVigente() : int
 }
 
 class Lote {
@@ -167,6 +177,8 @@ class RetiroVencido {
 Rol "1" -- "0..*" Usuario : asigna >
 Rol ..> TipoRol
 
+Catalogo "1" o-- "0..*" Categoria : organiza >
+Catalogo "1" o-- "0..*" Producto : contiene >
 Categoria "1" -- "0..*" Producto : clasifica >
 Producto "1" *-- "0..*" Lote : se agrupa en >
 Lote "1" -- "0..1" StockVencido : vence en >
@@ -193,13 +205,11 @@ note bottom of Usuario
   vencidos y las consultas los puede ejecutar el Empleado.
 end note
 
-note bottom of Producto
-  Dato derivado de los lotes:
-  stockVigente = suma de cantidadLote de los lotes no vencidos.
-  El stock vencido NO es dato del Producto: pertenece al Lote /
-  StockVencido. El total fisico (vigente + vencido) es solo un
-  conteo a nivel de reporte del sistema (RD-02): el Producto
-  opera unicamente sobre su stock vigente.
+note bottom of Catalogo
+  El Catalogo centraliza las consultas del inventario que no son
+  de un producto puntual: buscar, listar, y los avisos de stock
+  bajo y de vencimientos (recorriendo los lotes de cada producto).
+  Asi Producto no se encarga de juntar ni contar.
 end note
 
 note bottom of Lote
