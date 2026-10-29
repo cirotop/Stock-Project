@@ -1,7 +1,5 @@
 # Diagramas de Secuencia del Sistema (DSS) - Stock Proyect
 
-Diagramas de Secuencia del Sistema derivados de los Casos de Uso. El actor interactúa con `:Sistema` (caja negra); las respuestas van punteadas y los caminos alternativos se representan con los marcos `alt`, `opt` y `loop`. Cada bloque se puede pegar por separado en https://mermaid.live.
-
 > Nivel: DSS (sistema como caja negra). Los **procesos automáticos** (vencimiento de lote, alertas) no se incluyen porque no los inicia un actor.
 
 ---
