@@ -85,7 +85,7 @@ sequenceDiagram
     U->>S: registrarIngreso(codigoProducto, nroLote, cantidad, fechaVencimiento)
     alt producto existe y datos válidos
         opt nroLote ya existe para ese producto
-            S-->>U: muestra lote existente; sumar cantidad o corregir nro
+            S-->>U: muestra lote existente, ofrece sumar cantidad o corregir nro
         end
         opt fechaVencimiento ya pasó
             S-->>U: "mercadería vencida" (pide confirmar)
