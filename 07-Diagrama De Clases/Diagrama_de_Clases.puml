@@ -70,6 +70,7 @@ class Usuario {
 class Catalogo {
   --
   + buscarProducto(codigoProducto : String) : Producto
+  + buscarCategoria(nombreCategoria : String) : Categoria
   + listarProductos() : Producto[]
   + listarStockBajo() : Producto[]
   + listarProximosAVencer(dias : int) : Lote[]
@@ -96,6 +97,7 @@ class Producto {
   + modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : void
   + darBaja() : void
   + buscarLote(nroLote : String) : Lote
+  + getLotes() : Lote[]
   + tieneStockBajo() : boolean
   + estaActivo() : boolean
 }
@@ -122,6 +124,7 @@ class StockVencido {
   --
   + descontar(cantidad : int) : int
   + estaRetirado() : boolean
+  + getCodigoEtiqueta() : String
   + getCantidad() : int
   + getLote() : Lote
 }

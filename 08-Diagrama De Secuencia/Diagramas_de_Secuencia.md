@@ -8,7 +8,6 @@
 > - `crear(...)` / `registrar(...)`: operación de clase (`{static}`) que crea el objeto; el objeto nuevo aparece en el punto donde se crea.
 > - `loop` = bucle, `opt` = opcional, `alt` = alternativo.
 > - `responsable:Usuario` es el usuario logueado que ejecuta la operación; las operaciones lo verifican con `esAdministrador()` (RN-11).
-> - **⚠** marca un método que el caso de uso necesita y que **todavía no existe en el DCC**.
 >
 > Los **procesos automáticos** (vencimiento de lote, alertas) no se diagraman porque no los inicia un actor.
 
@@ -17,6 +16,7 @@
 ## CU-01 - Iniciar sesión
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor u as u:Usuario
     participant ci as ci:ControladorIniciarSesion
@@ -54,6 +54,7 @@ sequenceDiagram
 ### Alta
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor adm as adm:Administrador
     participant cgu as cgu:ControladorGestionarUsuario
@@ -79,6 +80,7 @@ sequenceDiagram
 ### Modificación y baja
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor adm as adm:Administrador
     participant cgu as cgu:ControladorGestionarUsuario
@@ -111,6 +113,7 @@ sequenceDiagram
 ### Alta
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor adm as adm:Administrador
     participant cgc as cgc:ControladorGestionarCategoria
@@ -118,7 +121,7 @@ sequenceDiagram
     participant resp as responsable:Usuario
 
     adm->>+cgc: altaCategoria(nombreCategoria : String, descripcionCategoria : String)
-    cgc->>+cat: buscarCategoria(nombreCategoria : String) ⚠
+    cgc->>+cat: buscarCategoria(nombreCategoria : String)
     cat-->>-cgc: «existente : Categoria»
     alt nombre disponible
         create participant c as c:Categoria
@@ -136,6 +139,7 @@ sequenceDiagram
 ### Modificación
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor adm as adm:Administrador
     participant cgc as cgc:ControladorGestionarCategoria
@@ -146,7 +150,7 @@ sequenceDiagram
     adm->>+cgc: modificarCategoria(nombreActual : String, nombreCategoria : String, descripcionCategoria : String)
     cgc->>+resp: esAdministrador()
     resp-->>-cgc: «true»
-    cgc->>+cat: buscarCategoria(nombreActual : String) ⚠
+    cgc->>+cat: buscarCategoria(nombreActual : String)
     cat-->>-cgc: «c : Categoria»
     cgc->>+c: modificar(nombreCategoria : String, descripcionCategoria : String)
     c-->>-cgc: 
@@ -160,6 +164,7 @@ sequenceDiagram
 ### Alta
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor adm as adm:Administrador
     participant cgp as cgp:ControladorGestionarProducto
@@ -170,7 +175,7 @@ sequenceDiagram
     cgp->>+cat: buscarProducto(codigoProducto : String)
     cat-->>-cgp: «existente : Producto»
     alt código disponible
-        cgp->>+cat: buscarCategoria(nombreCategoria : String) ⚠
+        cgp->>+cat: buscarCategoria(nombreCategoria : String)
         cat-->>-cgp: «categoria : Categoria»
         create participant p as p:Producto
         cgp->>+p: crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, responsable : Usuario)
@@ -188,6 +193,7 @@ sequenceDiagram
 ### Modificación y baja
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor adm as adm:Administrador
     participant cgp as cgp:ControladorGestionarProducto
@@ -200,7 +206,7 @@ sequenceDiagram
     resp-->>-cgp: «true»
     cgp->>+cat: buscarProducto(codigoProducto : String)
     cat-->>-cgp: «p : Producto»
-    cgp->>+cat: buscarCategoria(nombreCategoria : String) ⚠
+    cgp->>+cat: buscarCategoria(nombreCategoria : String)
     cat-->>-cgp: «categoria : Categoria»
     cgp->>+p: modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int)
     p-->>-cgp: 
@@ -222,6 +228,7 @@ sequenceDiagram
 ## CU-05 - Registrar ingreso de mercadería
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor u as u:Usuario
     participant cri as cri:ControladorRegistrarIngreso
@@ -262,7 +269,7 @@ sequenceDiagram
             lt-->>-ing: «cantidadLote : int»
         end
         ing-->>-cri: «true»
-        cri->>+p: getLotes() ⚠
+        cri->>+p: getLotes()
         p-->>-cri: «lotes : Lote[]»
         Note right of cri: stock vigente = suma de getCantidadLote()<br/>de los lotes no vencidos
         cri-->>u: «ingreso registrado + stock vigente del producto»
@@ -277,6 +284,7 @@ sequenceDiagram
 ## CU-06 - Ajustar stock
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor adm as adm:Administrador
     participant cas as cas:ControladorAjustarStock
@@ -288,7 +296,7 @@ sequenceDiagram
     adm->>+cas: seleccionarProducto(codigoProducto : String)
     cas->>+cat: buscarProducto(codigoProducto : String)
     cat-->>-cas: «p : Producto»
-    cas->>+p: getLotes() ⚠
+    cas->>+p: getLotes()
     p-->>-cas: «lotes : Lote[]»
     loop para cada lt en lotes
         cas->>+lt: getFechaVencimiento()
@@ -328,6 +336,7 @@ sequenceDiagram
 ## CU-07 - Registrar retiro de mercadería vencida
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor u as u:Usuario
     participant crv as crv:ControladorRegistrarRetiro
@@ -340,7 +349,7 @@ sequenceDiagram
     crv->>+cat: listarVencidos()
     cat-->>-crv: «vencidos : StockVencido[]»
     loop para cada sv en vencidos
-        crv->>+sv: getCodigoEtiqueta() ⚠
+        crv->>+sv: getCodigoEtiqueta()
         sv-->>-crv: «codigo : String»
     end
     Note right of crv: si codigo = codigoEtiqueta<br/>encontrado = vencidos[i]<br/>cortar iteración
@@ -382,6 +391,7 @@ sequenceDiagram
 ## CU-08 - Consultar productos con stock bajo
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor u as u:Usuario
     participant csb as csb:ControladorConsultarStockBajo
@@ -411,6 +421,7 @@ sequenceDiagram
 ## CU-09 - Consultar vencimientos y stock vencido
 
 ```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor u as u:Usuario
     participant ccv as ccv:ControladorConsultarVencimientos
@@ -427,7 +438,7 @@ sequenceDiagram
     ccv->>+cat: listarProductos()
     cat-->>-ccv: «productos : Producto[]»
     loop para cada p en productos
-        ccv->>+p: getLotes() ⚠
+        ccv->>+p: getLotes()
         p-->>-ccv: «lotes : Lote[]»
         loop para cada lt en lotes
             ccv->>+lt: getCantidadLote()
@@ -451,14 +462,6 @@ sequenceDiagram
 
 ---
 
-## Métodos que faltan en el DCC (⚠)
+## Controladores
 
-Los diagramas usan tres métodos que los casos de uso necesitan y el diagrama de clases todavía no tiene:
-
-| Método | Lo usan | Para qué |
-|---|---|---|
-| `Catalogo.buscarCategoria(nombreCategoria : String) : Categoria` | CU-03, CU-04 | validar que el nombre no se repita y obtener la categoría del producto |
-| `Producto.getLotes() : Lote[]` | CU-05, CU-06, CU-09 | listar los lotes de un producto y calcular su stock vigente |
-| `StockVencido.getCodigoEtiqueta() : String` | CU-07 | encontrar el lote vencido por la etiqueta leída |
-
-Los **controladores** (`ControladorIniciarSesion`, `ControladorGestionarUsuario`, etc.) son clases de diseño nuevas: no figuran en el DCC, que modela solo el dominio.
+Los **controladores** (`ControladorIniciarSesion`, `ControladorGestionarUsuario`, etc.) son clases de diseño: no figuran en el DCC, que modela solo el dominio. Todos los métodos que los diagramas invocan sobre objetos del dominio existen en el [Diagrama de Clases](../07-Diagrama%20De%20Clases/Diagrama_de_Clases.puml).
