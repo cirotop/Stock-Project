@@ -7,8 +7,10 @@
 > - Flecha punteada: retorno, con el valor devuelto entre comillas latinas: `«valor : Tipo»`. Un retorno sin texto indica que el método no devuelve nada.
 > - **No hay mensajes de un objeto a sí mismo.** Los cálculos y comparaciones se escriben en una nota (como `subtotal = subtotal + (cantidad * precio)` en la teoría).
 > - **Las búsquedas y los listados se dibujan recorriendo la colección** en un `loop` (bucle): a cada elemento `coleccion[i]` se le pide el dato con su getter, y una nota dice qué se hace (`si ... cortar iteración` en una búsqueda, `agregar al resultado` en un listado). El objeto encontrado es otra línea de vida, como `especif[i]` y `ep` en la teoría.
-> - `buscarProducto`, `buscarCategoria`, `buscarLote` y `listarVencidos` son operaciones del Catálogo y del Producto en el DCC: se muestran como un mensaje con su retorno, porque el DCC no tiene los getters ni las asociaciones para dibujar su recorrido.
+> - **Listar es una búsqueda**: los listados (stock bajo, próximos a vencer, vencidos, productos) no se le piden al Catálogo con un `listar...`. El controlador los busca recorriendo la colección en un `loop` y preguntándole a cada elemento; la nota dice cuáles se agregan al resultado.
+> - `buscarProducto`, `buscarCategoria` y `buscarLote` son operaciones del Catálogo y del Producto en el DCC: se muestran como un mensaje con su retorno, porque el DCC no tiene los getters para dibujar su recorrido.
 > - Flecha punteada con punta abierta `crear(...)` / `registrar(...)`: creación; la caja del objeto nuevo aparece a esa altura.
+> - **Un DSD por operación del sistema**, como en la teoría (`crearNuevaVenta` e `introducirArticulo` tienen cada una su diagrama): cada DSD empieza con un único mensaje del actor al controlador y termina con su retorno. Cuando una operación usa algo que obtuvo la anterior, el controlador lo conserva (como `ventaActual` en la teoría).
 > - `loop` = bucle, `opt` = opcional, `alt` = alternativo.
 > - `responsable:Usuario` es el usuario logueado; donde la operación es exclusiva del Administrador, el controlador lo verifica con `esAdministrador()` (RN-11).
 >
@@ -25,7 +27,9 @@ sequenceDiagram
     participant ci as ci:ControladorIniciarSesion
     participant ui as usuarios[i]:Usuario
     participant us as us:Usuario
-    participant cat as cat:Catalogo
+    participant pi as productos[i]:Producto
+    participant li as lotes[j]:Lote
+    participant vi as vencidos[k]:StockVencido
 
     u->>+ci: iniciarSesion(nombreUsuario : String, contraseña : String)
     loop para cada usuario en usuarios
@@ -40,13 +44,24 @@ sequenceDiagram
         alt activo = true
             ci->>+us: esAdministrador()
             us-->>-ci: «esAdmin : boolean»
-            ci->>+cat: listarStockBajo()
-            cat-->>-ci: «stockBajo : Producto[]»
-            ci->>+cat: listarProximosAVencer(dias : int)
-            cat-->>-ci: «proximos : Lote[]»
-            ci->>+cat: listarVencidos()
-            cat-->>-ci: «vencidos : StockVencido[]»
-            Note right of cat: el recorrido de cada listado<br/>se detalla en CU-08 y CU-09
+            loop para cada producto en productos
+                ci->>+pi: estaActivo()
+                pi-->>-ci: «productoActivo : boolean»
+                ci->>+pi: tieneStockBajo()
+                pi-->>-ci: «stockBajo : boolean»
+                ci->>+pi: getLotes()
+                pi-->>-ci: «lotes : Lote[]»
+                loop para cada lote en lotes
+                    ci->>+li: estaProximoAVencer(dias : int)
+                    li-->>-ci: «proximo : boolean»
+                end
+            end
+            Note right of ci: si productoActivo y stockBajo: agregar productos[i] a alertasStock<br/>si proximo: agregar lotes[j] a alertasVencimiento (dias = 15)
+            loop para cada stockVencido en vencidos
+                ci->>+vi: estaRetirado()
+                vi-->>-ci: «retirado : boolean»
+            end
+            Note right of ci: si retirado = false:<br/>agregar vencidos[k] a alertasVencidos
             ci-->>u: «funciones del rol + panel de alertas»
         else activo = false (usuario dado de baja)
             ci-->>u: «"usuario o contraseña incorrectos"»
@@ -96,7 +111,7 @@ sequenceDiagram
     deactivate cgu
 ```
 
-### Modificación y baja
+### Modificación: `modificarUsuario`
 
 ```mermaid
 %%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
@@ -122,8 +137,20 @@ sequenceDiagram
     end
     Note right of cgu: si nombre = nombreRol<br/>rol = roles[i]<br/>cortar iteración
     cgu->>+us: modificar(nombreCompleto : String, rol : Rol)
-    us-->>-cgu: 
+    us-->>-cgu:
     cgu-->>-adm: «usuario modificado»
+```
+
+### Baja: `darBajaUsuario`
+
+```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
+sequenceDiagram
+    actor adm as adm:Administrador
+    participant cgu as cgu:ControladorGestionarUsuario
+    participant resp as responsable:Usuario
+    participant ui as usuarios[i]:Usuario
+    participant us as us:Usuario
 
     adm->>+cgu: darBajaUsuario(nombreUsuario : String)
     cgu->>+resp: esAdministrador()
@@ -135,7 +162,7 @@ sequenceDiagram
     Note right of cgu: si nombre = nombreUsuario<br/>us = usuarios[i]<br/>cortar iteración
     cgu->>+us: darBaja()
     Note right of us: baja lógica: estadoUsuario = inactivo
-    us-->>-cgu: 
+    us-->>-cgu:
     cgu-->>-adm: «usuario dado de baja»
 ```
 
@@ -221,7 +248,7 @@ sequenceDiagram
     deactivate cgp
 ```
 
-### Modificación y baja
+### Modificación: `modificarProducto`
 
 ```mermaid
 %%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
@@ -240,8 +267,20 @@ sequenceDiagram
     cgp->>+cat: buscarCategoria(nombreCategoria : String)
     cat-->>-cgp: «categoria : Categoria»
     cgp->>+p: modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int)
-    p-->>-cgp: 
+    p-->>-cgp:
     cgp-->>-adm: «producto modificado»
+```
+
+### Baja: `darBajaProducto`
+
+```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
+sequenceDiagram
+    actor adm as adm:Administrador
+    participant cgp as cgp:ControladorGestionarProducto
+    participant resp as responsable:Usuario
+    participant cat as cat:Catalogo
+    participant p as p:Producto
 
     adm->>+cgp: darBajaProducto(codigoProducto : String)
     cgp->>+resp: esAdministrador()
@@ -250,13 +289,17 @@ sequenceDiagram
     cat-->>-cgp: «p : Producto»
     cgp->>+p: darBaja()
     Note right of p: baja lógica: estadoProducto = inactivo (RN-10)
-    p-->>-cgp: 
+    p-->>-cgp:
     cgp-->>-adm: «producto dado de baja»
 ```
 
 ---
 
 ## CU-05 - Registrar ingreso de mercadería
+
+El usuario hace dos operaciones: primero carga los datos (`registrarIngreso`) y el sistema le muestra qué va a pasar (lote nuevo o existente, y si la mercadería ya está vencida); después confirma (`confirmarIngreso`). Si quiere corregir el número de lote (3.b del CU), vuelve a enviar `registrarIngreso` con el número correcto.
+
+### Operación 1: `registrarIngreso`
 
 ```mermaid
 %%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
@@ -265,7 +308,6 @@ sequenceDiagram
     participant cri as cri:ControladorRegistrarIngreso
     participant cat as cat:Catalogo
     participant p as p:Producto
-    participant li as lotes[i]:Lote
     participant lt as lt:Lote
 
     u->>+cri: registrarIngreso(codigoProducto : String, nroLote : String, cantidad : int, fechaVencimiento : Date)
@@ -280,37 +322,48 @@ sequenceDiagram
         p-->>-cri: «lt : Lote»
         opt lt != null (el lote ya existe)
             cri->>+lt: getFechaVencimiento()
-            lt-->>-cri: «fechaVencimiento : Date»
-            cri-->>u: «lote existente: ¿sumar la cantidad o corregir el número?»
-            u->>cri: sumarAlLote()
+            lt-->>-cri: «fechaLote : Date»
         end
-        opt fechaVencimiento anterior a la fecha actual
-            cri-->>u: «"la mercadería ya está vencida": pide confirmar»
-            u->>cri: confirmar()
-        end
-        create participant ing as ing:IngresoMercaderia
-        cri--)ing: registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
-        cri->>+ing: aplicar()
-        alt lt = null (lote nuevo)
-            create participant nl as nl:Lote
-            ing--)nl: crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
-        else lt != null (lote existente)
-            ing->>+lt: aumentarCantidad(cantidad : int)
-            lt-->>-ing: «cantidadLote : int»
-        end
-        ing-->>-cri: «true»
-        cri->>+p: getLotes()
-        p-->>-cri: «lotes : Lote[]»
-        loop para cada lote en lotes
-            cri->>+li: estaVencido(fecha : Date)
-            li-->>-cri: «vencido : boolean»
-            cri->>+li: getCantidadLote()
-            li-->>-cri: «cantidadLote : int»
-        end
-        Note right of cri: si vencido = false:<br/>stockVigente = stockVigente + cantidadLote
-        cri-->>u: «ingreso registrado + stockVigente»
+        Note right of cri: vencida = fechaVencimiento anterior a la fecha actual
+        cri-->>u: «a confirmar: lote nuevo o lote existente (con su fecha), y aviso si vencida = true»
     end
     deactivate cri
+```
+
+### Operación 2: `confirmarIngreso`
+
+```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
+sequenceDiagram
+    actor u as u:Usuario
+    participant cri as cri:ControladorRegistrarIngreso
+    participant p as p:Producto
+    participant li as lotes[i]:Lote
+    participant lt as lt:Lote
+
+    u->>+cri: confirmarIngreso()
+    Note right of cri: usa p, lt, nroLote, cantidad y fechaVencimiento<br/>obtenidos en registrarIngreso
+    create participant ing as ing:IngresoMercaderia
+    cri--)ing: registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
+    cri->>+ing: aplicar()
+    alt lt = null (lote nuevo)
+        create participant nl as nl:Lote
+        ing--)nl: crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
+    else lt != null (se suma al lote existente)
+        ing->>+lt: aumentarCantidad(cantidad : int)
+        lt-->>-ing: «cantidadLote : int»
+    end
+    ing-->>-cri: «true»
+    cri->>+p: getLotes()
+    p-->>-cri: «lotes : Lote[]»
+    loop para cada lote en lotes
+        cri->>+li: estaVencido(fecha : Date)
+        li-->>-cri: «vencido : boolean»
+        cri->>+li: getCantidadLote()
+        li-->>-cri: «cantidadLote : int»
+    end
+    Note right of cri: si vencido = false:<br/>stockVigente = stockVigente + cantidadLote
+    cri-->>-u: «ingreso registrado + stockVigente»
 ```
 
 > El movimiento queda asentado con el usuario y la fecha (RN-07): `registrar(...)` recibe al `responsable`.
@@ -319,16 +372,16 @@ sequenceDiagram
 
 ## CU-06 - Ajustar stock
 
+### Operación 1: `seleccionarProducto`
+
 ```mermaid
 %%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor adm as adm:Administrador
     participant cas as cas:ControladorAjustarStock
-    participant resp as responsable:Usuario
     participant cat as cat:Catalogo
     participant p as p:Producto
     participant li as lotes[i]:Lote
-    participant lt as lt:Lote
 
     adm->>+cas: seleccionarProducto(codigoProducto : String)
     cas->>+cat: buscarProducto(codigoProducto : String)
@@ -342,8 +395,21 @@ sequenceDiagram
         li-->>-cas: «cantidadLote : int»
     end
     cas-->>-adm: «lotes (fechaVencimiento, cantidad)»
+```
+
+### Operación 2: `ajustarStock`
+
+```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
+sequenceDiagram
+    actor adm as adm:Administrador
+    participant cas as cas:ControladorAjustarStock
+    participant resp as responsable:Usuario
+    participant p as p:Producto
+    participant lt as lt:Lote
 
     adm->>+cas: ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
+    Note right of cas: p es el producto obtenido en seleccionarProducto
     cas->>+resp: esAdministrador()
     resp-->>-cas: «esAdmin : boolean»
     alt cantidadReal ≥ 0 y motivo cargado
@@ -371,25 +437,26 @@ sequenceDiagram
 
 ## CU-07 - Registrar retiro de mercadería vencida
 
+### Operación 1: `leerEtiqueta`
+
 ```mermaid
 %%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
 sequenceDiagram
     actor u as u:Usuario
     participant crv as crv:ControladorRegistrarRetiro
-    participant cat as cat:Catalogo
     participant vi as vencidos[i]:StockVencido
     participant sv as sv:StockVencido
     participant lt as lt:Lote
 
     Note over u: el laboratorio retira físicamente la mercadería<br/>del depósito (no interactúa con el sistema)
     u->>+crv: leerEtiqueta(codigoEtiqueta : String)
-    crv->>+cat: listarVencidos()
-    cat-->>-crv: «vencidos : StockVencido[]»
     loop para cada stockVencido en vencidos
         crv->>+vi: getCodigoEtiqueta()
         vi-->>-crv: «codigo : String»
+        crv->>+vi: estaRetirado()
+        vi-->>-crv: «retirado : boolean»
     end
-    Note right of crv: si codigo = codigoEtiqueta<br/>sv = vencidos[i]<br/>cortar iteración
+    Note right of crv: si codigo = codigoEtiqueta y retirado = false<br/>sv = vencidos[i]<br/>cortar iteración
     alt sv != null (etiqueta encontrada)
         crv->>+sv: getLote()
         sv-->>-crv: «lt : Lote»
@@ -404,8 +471,18 @@ sequenceDiagram
         crv-->>u: «"etiqueta no encontrada"»
     end
     deactivate crv
+```
+### Operación 2: `registrarRetiro`
+
+```mermaid
+%%{init: {"sequence": {"mirrorActors": false}, "themeCSS": ".loopLine { stroke-dasharray: none !important; stroke-width: 1.5px !important; }"}}%%
+sequenceDiagram
+    actor u as u:Usuario
+    participant crv as crv:ControladorRegistrarRetiro
+    participant sv as sv:StockVencido
 
     u->>+crv: registrarRetiro(cantidadRetirada : int)
+    Note right of crv: sv y cantidad son los obtenidos en leerEtiqueta
     alt cantidadRetirada ≤ cantidad
         create participant rv as rv:RetiroVencido
         crv--)rv: registrar(sv : StockVencido, cantidadRetirada : int, responsable : Usuario)
@@ -431,22 +508,19 @@ sequenceDiagram
 sequenceDiagram
     actor u as u:Usuario
     participant csb as csb:ControladorConsultarStockBajo
-    participant cat as cat:Catalogo
     participant pi as productos[i]:Producto
 
     u->>+csb: consultarStockBajo()
-    csb->>+cat: listarStockBajo()
     loop para cada producto en productos
-        cat->>+pi: estaActivo()
-        pi-->>-cat: «activo : boolean»
-        cat->>+pi: tieneStockBajo()
-        pi-->>-cat: «stockBajo : boolean»
+        csb->>+pi: estaActivo()
+        pi-->>-csb: «activo : boolean»
+        csb->>+pi: tieneStockBajo()
+        pi-->>-csb: «stockBajo : boolean»
     end
-    Note right of cat: si activo y stockBajo:<br/>agregar productos[i] al resultado<br/>(se recorren todos, no se corta)
-    cat-->>-csb: «stockBajo : Producto[]»
-    alt stockBajo no está vacía
+    Note right of csb: si activo y stockBajo:<br/>agregar productos[i] al resultado<br/>(se recorren todos, no se corta)
+    alt el resultado no está vacío
         csb-->>u: «productos a reponer»
-    else stockBajo vacía
+    else resultado vacío
         csb-->>u: «"no hay productos con stock bajo"»
     end
     deactivate csb
@@ -461,45 +535,30 @@ sequenceDiagram
 sequenceDiagram
     actor u as u:Usuario
     participant ccv as ccv:ControladorConsultarVencimientos
-    participant cat as cat:Catalogo
     participant pi as productos[i]:Producto
     participant li as lotes[j]:Lote
     participant vi as vencidos[k]:StockVencido
     participant lv as lv:Lote
 
     u->>+ccv: consultarVencimientos()
-    ccv->>+cat: listarProximosAVencer(dias : int)
     loop para cada producto en productos
-        cat->>+pi: getLotes()
-        pi-->>-cat: «lotes : Lote[]»
-        loop para cada lote en lotes
-            cat->>+li: estaProximoAVencer(dias : int)
-            li-->>-cat: «proximo : boolean»
-        end
-    end
-    Note right of cat: dias = 15 (RN-17)<br/>si proximo: agregar lotes[j] al resultado
-    cat-->>-ccv: «proximos : Lote[]»
-    ccv->>+cat: listarVencidos()
-    cat-->>-ccv: «vencidos : StockVencido[]»
-    ccv->>+cat: listarProductos()
-    loop para cada producto en productos
-        cat->>+pi: estaActivo()
-        pi-->>-cat: «activo : boolean»
-    end
-    Note right of cat: si activo: agregar productos[i] al resultado
-    cat-->>-ccv: «productos : Producto[]»
-    loop para cada producto en productos
+        ccv->>+pi: estaActivo()
+        pi-->>-ccv: «activo : boolean»
         ccv->>+pi: getLotes()
         pi-->>-ccv: «lotes : Lote[]»
         loop para cada lote en lotes
+            ccv->>+li: estaProximoAVencer(dias : int)
+            li-->>-ccv: «proximo : boolean»
             ccv->>+li: estaVencido(fecha : Date)
             li-->>-ccv: «vencido : boolean»
             ccv->>+li: getCantidadLote()
             li-->>-ccv: «cantidadLote : int»
         end
     end
-    Note right of ccv: si vencido = false:<br/>stockVigente(p) = stockVigente(p) + cantidadLote
+    Note right of ccv: solo productos activos:<br/>si proximo: agregar lotes[j] a proximos (dias = 15, RN-17)<br/>si vencido = false: stockVigente(p) = stockVigente(p) + cantidadLote
     loop para cada stockVencido en vencidos
+        ccv->>+vi: estaRetirado()
+        vi-->>-ccv: «retirado : boolean»
         ccv->>+vi: getCantidad()
         vi-->>-ccv: «cantidad : int»
         ccv->>+vi: getLote()
@@ -507,15 +566,15 @@ sequenceDiagram
         ccv->>+lv: getProducto()
         lv-->>-ccv: «p : Producto»
     end
-    Note right of ccv: stockVencido(p) = stockVencido(p) + cantidad<br/>totalFisico(p) = stockVigente(p) + stockVencido(p) (RN-19)
+    Note right of ccv: si retirado = false: agregar vencidos[k] a pendientes<br/>stockVencido(p) = stockVencido(p) + cantidad<br/>totalFisico(p) = stockVigente(p) + stockVencido(p) (RN-19)
     alt proximos no está vacía
         ccv-->>u: «lotes próximos a vencer»
     else proximos vacía
         ccv-->>u: «"no hay lotes por vencer"»
     end
-    alt vencidos no está vacía
+    alt pendientes no está vacía
         ccv-->>u: «lotes vencidos pendientes de retiro»
-    else vencidos vacía
+    else pendientes vacía
         ccv-->>u: «"no hay mercadería vencida en el depósito"»
     end
     ccv-->>u: «por producto: stockVigente, stockVencido y totalFisico»
