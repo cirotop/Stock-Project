@@ -1,0 +1,37 @@
+@startuml DSD_CU-05_registrarIngreso
+' Diagrama de Secuencia de Diseño (DSD) - CU-05 Registrar ingreso de mercadería - registrarIngreso
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>u:Administrador/Empleado</u>" as u
+participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
+participant "<u>cat:Catalogo</u>" as cat
+participant "<u>p:Producto</u>" as p
+participant "<u>lt:Lote</u>" as lt
+
+u -> cri ++ : registrarIngreso(codigoProducto : String, nroLote : String, cantidad : int, fechaVencimiento : Date)
+cri -> cat ++ : buscarProducto(codigoProducto : String)
+cat --> cri -- : «p : Producto»
+alt p = null (producto no existe)
+  cri --> u : «ofrece dar de alta el producto (CU-04) o cancelar»
+else cantidad inválida, o falta nroLote o fechaVencimiento
+  cri --> u : «"dato inválido o incompleto"»
+else producto existe y datos válidos
+  cri -> p ++ : buscarLote(nroLote : String)
+  p --> cri -- : «lt : Lote»
+  opt lt != null (el lote ya existe)
+    cri -> lt ++ : getFechaVencimiento()
+    lt --> cri -- : «fechaLote : Date»
+  end
+  note right of cri : vencida = fechaVencimiento anterior a la fecha actual
+  cri --> u : «a confirmar: lote nuevo o lote existente (con su fecha), y aviso si vencida = true»
+end
+deactivate cri
+
+@enduml

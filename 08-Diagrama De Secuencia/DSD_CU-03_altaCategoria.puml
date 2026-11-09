@@ -1,0 +1,28 @@
+@startuml DSD_CU-03_altaCategoria
+' Diagrama de Secuencia de Diseño (DSD) - CU-03 Gestionar categoría - altaCategoria
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>adm:Administrador</u>" as adm
+participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
+participant "<u>cat:Catalogo</u>" as cat
+
+adm -> cgc ++ : altaCategoria(nombreCategoria : String, descripcionCategoria : String)
+cgc -> cat ++ : buscarCategoria(nombreCategoria : String)
+cat --> cgc -- : «existente : Categoria»
+alt existente = null (nombre disponible)
+  create participant "<u>c:Categoria</u>" as c
+  cgc -->> c : crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario)
+  cgc --> adm : «categoría creada»
+else existente != null (nombre ya registrado)
+  cgc --> adm : «"categoría ya registrada"»
+end
+deactivate cgc
+
+@enduml

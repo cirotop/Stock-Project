@@ -1,0 +1,46 @@
+@startuml DSD_CU-02_altaUsuario
+' Diagrama de Secuencia de Diseño (DSD) - CU-02 Gestionar usuario - altaUsuario
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>adm:Administrador</u>" as adm
+participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>usuarios[i]:Usuario</u>" as ui
+participant "<u>roles[i]:Rol</u>" as ri
+
+adm -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
+group bucle [para cada usuario en usuarios]
+  cgu -> ui ++ : getNombreUsuario()
+  ui --> cgu -- : «nombre : String»
+end
+note right of cgu
+  si nombre = nombreUsuario
+  existente = usuarios[i]
+  cortar iteración
+end note
+alt existente = null (nombre disponible)
+  group bucle [para cada rol en roles]
+    cgu -> ri ++ : getNombreRol()
+    ri --> cgu -- : «nombre : TipoRol»
+  end
+  note right of cgu
+    si nombre = nombreRol
+    rol = roles[i]
+    cortar iteración
+  end note
+  create participant "<u>nu:Usuario</u>" as nu
+  cgu -->> nu : crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, responsable : Usuario)
+  note right of nu : guarda la contraseña cifrada (hash)
+  cgu --> adm : «usuario creado»
+else existente != null (nombre ya usado)
+  cgu --> adm : «"nombre de usuario no disponible"»
+end
+deactivate cgu
+
+@enduml

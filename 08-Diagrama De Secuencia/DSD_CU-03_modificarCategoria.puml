@@ -1,0 +1,24 @@
+@startuml DSD_CU-03_modificarCategoria
+' Diagrama de Secuencia de Diseño (DSD) - CU-03 Gestionar categoría - modificarCategoria
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>adm:Administrador</u>" as adm
+participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
+participant "<u>cat:Catalogo</u>" as cat
+participant "<u>c:Categoria</u>" as c
+
+adm -> cgc ++ : modificarCategoria(nombreActual : String, nombreCategoria : String, descripcionCategoria : String)
+cgc -> cat ++ : buscarCategoria(nombreActual : String)
+cat --> cgc -- : «c : Categoria»
+cgc -> c ++ : modificar(nombreCategoria : String, descripcionCategoria : String)
+c --> cgc --
+cgc --> adm -- : «categoría modificada»
+
+@enduml

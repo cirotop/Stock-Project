@@ -1,0 +1,25 @@
+@startuml DSD_CU-04_darBajaProducto
+' Diagrama de Secuencia de Diseño (DSD) - CU-04 Gestionar producto - darBajaProducto
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>adm:Administrador</u>" as adm
+participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
+participant "<u>cat:Catalogo</u>" as cat
+participant "<u>p:Producto</u>" as p
+
+adm -> cgp ++ : darBajaProducto(codigoProducto : String)
+cgp -> cat ++ : buscarProducto(codigoProducto : String)
+cat --> cgp -- : «p : Producto»
+cgp -> p ++ : darBaja()
+note right of p : baja lógica: estadoProducto = inactivo (RN-10)
+p --> cgp --
+cgp --> adm -- : «producto dado de baja»
+
+@enduml

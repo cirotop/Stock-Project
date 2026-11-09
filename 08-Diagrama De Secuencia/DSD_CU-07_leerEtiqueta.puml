@@ -1,0 +1,52 @@
+@startuml DSD_CU-07_leerEtiqueta
+' Diagrama de Secuencia de Diseño (DSD) - CU-07 Registrar retiro de mercadería vencida - leerEtiqueta
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>u:Administrador/Empleado</u>" as u
+participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
+participant "<u>cat:Catalogo</u>" as cat
+participant "<u>vencidos[i]:StockVencido</u>" as vi
+participant "<u>sv:StockVencido</u>" as sv
+participant "<u>lt:Lote</u>" as lt
+
+note over u : el laboratorio retira físicamente la mercadería\ndel depósito (no interactúa con el sistema)
+u -> crv ++ : leerEtiqueta(codigoEtiqueta : String)
+crv -> cat ++ : listarVencidos()
+group bucle [para cada stockVencido en vencidos]
+  cat -> vi ++ : estaRetirado()
+  vi --> cat -- : «retirado : boolean»
+end
+note right of cat : si retirado = false:\nagregar vencidos[i] al resultado
+cat --> crv -- : «vencidos : StockVencido[]»
+group bucle [para cada stockVencido en vencidos]
+  crv -> vi ++ : getCodigoEtiqueta()
+  vi --> crv -- : «codigo : String»
+end
+note right of crv
+  si codigo = codigoEtiqueta
+  sv = vencidos[i]
+  cortar iteración
+end note
+alt sv != null (etiqueta encontrada)
+  crv -> sv ++ : getLote()
+  sv --> crv -- : «lt : Lote»
+  crv -> lt ++ : getProducto()
+  lt --> crv -- : «p : Producto»
+  crv -> lt ++ : getFechaVencimiento()
+  lt --> crv -- : «fechaVencimiento : Date»
+  crv -> sv ++ : getCantidad()
+  sv --> crv -- : «cantidad : int»
+  crv --> u : «producto, cantidad y fecha de vencimiento del lote»
+else sv = null (etiqueta no encontrada)
+  crv --> u : «"etiqueta no encontrada"»
+end
+deactivate crv
+
+@enduml

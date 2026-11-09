@@ -1,0 +1,75 @@
+@startuml DSD_CU-01_iniciarSesion
+' Diagrama de Secuencia de Diseño (DSD) - CU-01 Iniciar sesión - iniciarSesion
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>u:Administrador/Empleado</u>" as u
+participant "<u>ci:ControladorIniciarSesion</u>" as ci
+participant "<u>usuarios[i]:Usuario</u>" as ui
+participant "<u>us:Usuario</u>" as us
+participant "<u>cat:Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>lotes[j]:Lote</u>" as li
+participant "<u>vencidos[k]:StockVencido</u>" as vi
+
+u -> ci ++ : iniciarSesion(nombreUsuario : String, contraseña : String)
+group bucle [para cada usuario en usuarios]
+  ci -> ui ++ : getNombreUsuario()
+  ui --> ci -- : «nombre : String»
+end
+note right of ci
+  si nombre = nombreUsuario
+  us = usuarios[i]
+  cortar iteración
+end note
+note right of ci : el control de acceso compara la contraseña\ningresada con la almacenada (hash)
+alt us != null y contraseña correcta
+  ci -> us ++ : estaActivo()
+  us --> ci -- : «activo : boolean»
+  alt activo = true
+    ci -> us ++ : esAdministrador()
+    us --> ci -- : «esAdmin : boolean»
+    note right of ci : habilita las funciones del rol según esAdmin
+    ci -> cat ++ : listarStockBajo()
+    group bucle [para cada producto en productos]
+      cat -> pi ++ : estaActivo()
+      pi --> cat -- : «activo : boolean»
+      cat -> pi ++ : tieneStockBajo()
+      pi --> cat -- : «stockBajo : boolean»
+    end
+    note right of cat : si activo y stockBajo:\nagregar productos[i] al resultado
+    cat --> ci -- : «stockBajo : Producto[]»
+    ci -> cat ++ : listarProximosAVencer(dias : int)
+    group bucle [para cada producto en productos]
+      cat -> pi ++ : getLotes()
+      pi --> cat -- : «lotes : Lote[]»
+      group bucle [para cada lote en lotes]
+        cat -> li ++ : estaProximoAVencer(dias : int)
+        li --> cat -- : «proximo : boolean»
+      end
+    end
+    note right of cat : dias = 15 (RN-17)\nsi proximo: agregar lotes[j] al resultado
+    cat --> ci -- : «proximos : Lote[]»
+    ci -> cat ++ : listarVencidos()
+    group bucle [para cada stockVencido en vencidos]
+      cat -> vi ++ : estaRetirado()
+      vi --> cat -- : «retirado : boolean»
+    end
+    note right of cat : si retirado = false:\nagregar vencidos[k] al resultado
+    cat --> ci -- : «vencidos : StockVencido[]»
+    ci --> u : «funciones del rol + panel de alertas»
+  else activo = false (usuario dado de baja)
+    ci --> u : «"usuario o contraseña incorrectos"»
+  end
+else usuario inexistente o contraseña incorrecta
+  ci --> u : «"usuario o contraseña incorrectos"»
+end
+deactivate ci
+
+@enduml

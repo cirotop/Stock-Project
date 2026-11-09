@@ -1,0 +1,42 @@
+@startuml DSD_CU-05_confirmarIngreso
+' Diagrama de Secuencia de Diseño (DSD) - CU-05 Registrar ingreso de mercadería - confirmarIngreso
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>u:Administrador/Empleado</u>" as u
+participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
+participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
+participant "<u>lt:Lote</u>" as lt
+
+u -> cri ++ : confirmarIngreso()
+note right of cri : usa p, lt, nroLote, cantidad y fechaVencimiento\nobtenidos en registrarIngreso
+create participant "<u>ing:IngresoMercaderia</u>" as ing
+cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
+cri -> ing ++ : aplicar()
+alt lt = null (lote nuevo)
+  create participant "<u>nl:Lote</u>" as nl
+  ing -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
+else lt != null (se suma al lote existente)
+  ing -> lt ++ : aumentarCantidad(cantidad : int)
+  lt --> ing -- : «cantidadLote : int»
+end
+ing --> cri -- : «true»
+cri -> p ++ : getLotes()
+p --> cri -- : «lotes : Lote[]»
+group bucle [para cada lote en lotes]
+  cri -> li ++ : estaVencido(fecha : Date)
+  li --> cri -- : «vencido : boolean»
+  cri -> li ++ : getCantidadLote()
+  li --> cri -- : «cantidadLote : int»
+end
+note right of cri : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+cri --> u -- : «ingreso registrado + stockVigente»
+
+@enduml

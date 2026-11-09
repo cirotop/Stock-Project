@@ -1,0 +1,31 @@
+@startuml DSD_CU-07_registrarRetiro
+' Diagrama de Secuencia de Diseño (DSD) - CU-07 Registrar retiro de mercadería vencida - registrarRetiro
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>u:Administrador/Empleado</u>" as u
+participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
+participant "<u>sv:StockVencido</u>" as sv
+
+u -> crv ++ : registrarRetiro(cantidadRetirada : int)
+note right of crv : sv y cantidad son los obtenidos en leerEtiqueta
+alt cantidadRetirada ≤ cantidad
+  create participant "<u>rv:RetiroVencido</u>" as rv
+  crv -->> rv : registrar(sv : StockVencido, cantidadRetirada : int, responsable : Usuario)
+  crv -> rv ++ : aplicar()
+  rv -> sv ++ : descontar(cantidadRetirada : int)
+  sv --> rv -- : «cantidadRestante : int»
+  rv --> crv -- : «true»
+  crv --> u : «retiro confirmado: stock vencido descontado (RN-18, RN-20)»
+else cantidadRetirada mayor que cantidad
+  crv --> u : «"la cantidad supera la del lote"»
+end
+deactivate crv
+
+@enduml

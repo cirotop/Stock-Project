@@ -1,0 +1,26 @@
+@startuml DSD_CU-04_modificarProducto
+' Diagrama de Secuencia de Diseño (DSD) - CU-04 Gestionar producto - modificarProducto
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>adm:Administrador</u>" as adm
+participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
+participant "<u>cat:Catalogo</u>" as cat
+participant "<u>p:Producto</u>" as p
+
+adm -> cgp ++ : modificarProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
+cgp -> cat ++ : buscarProducto(codigoProducto : String)
+cat --> cgp -- : «p : Producto»
+cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
+cat --> cgp -- : «categoria : Categoria»
+cgp -> p ++ : modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int)
+p --> cgp --
+cgp --> adm -- : «producto modificado»
+
+@enduml

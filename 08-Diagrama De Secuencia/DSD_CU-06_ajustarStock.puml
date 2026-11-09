@@ -1,0 +1,39 @@
+@startuml DSD_CU-06_ajustarStock
+' Diagrama de Secuencia de Diseño (DSD) - CU-06 Ajustar stock - ajustarStock
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>adm:Administrador</u>" as adm
+participant "<u>cas:ControladorAjustarStock</u>" as cas
+participant "<u>p:Producto</u>" as p
+participant "<u>lt:Lote</u>" as lt
+
+adm -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
+note right of cas : p es el producto obtenido en seleccionarProducto
+alt cantidadReal ≥ 0 y motivo cargado
+  cas -> p ++ : buscarLote(nroLote : String)
+  p --> cas -- : «lt : Lote»
+  create participant "<u>aj:AjusteStock</u>" as aj
+  cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
+  cas -> aj ++ : aplicar()
+  aj -> lt ++ : corregirCantidad(cantidadReal : int)
+  lt --> aj -- : «cantidadLote : int»
+  aj --> cas -- : «true»
+  cas -> p ++ : tieneStockBajo()
+  p --> cas -- : «stockBajo : boolean»
+  opt stockBajo = true
+    note right of cas : el producto queda en el listado\nde stock bajo (RN-16)
+  end
+  cas --> adm : «ajuste registrado + stock vigente recalculado»
+else cantidadReal negativa o falta el motivo
+  cas --> adm : «"dato inválido o incompleto"»
+end
+deactivate cas
+
+@enduml

@@ -1,0 +1,38 @@
+@startuml DSD_CU-08_consultarStockBajo
+' Diagrama de Secuencia de Diseño (DSD) - CU-08 Consultar productos con stock bajo - consultarStockBajo
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>u:Administrador/Empleado</u>" as u
+participant "<u>csb:ControladorConsultarStockBajo</u>" as csb
+participant "<u>cat:Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+
+u -> csb ++ : consultarStockBajo()
+csb -> cat ++ : listarStockBajo()
+group bucle [para cada producto en productos]
+  cat -> pi ++ : estaActivo()
+  pi --> cat -- : «activo : boolean»
+  cat -> pi ++ : tieneStockBajo()
+  pi --> cat -- : «stockBajo : boolean»
+end
+note right of cat
+  si activo y stockBajo:
+  agregar productos[i] al resultado
+  (se recorren todos, no se corta)
+end note
+cat --> csb -- : «stockBajo : Producto[]»
+alt stockBajo no está vacía
+  csb --> u : «productos a reponer»
+else stockBajo vacía
+  csb --> u : «"no hay productos con stock bajo"»
+end
+deactivate csb
+
+@enduml

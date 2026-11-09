@@ -1,0 +1,41 @@
+@startuml DSD_CU-02_modificarUsuario
+' Diagrama de Secuencia de Diseño (DSD) - CU-02 Gestionar usuario - modificarUsuario
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 12
+
+actor "<u>adm:Administrador</u>" as adm
+participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>usuarios[i]:Usuario</u>" as ui
+participant "<u>roles[i]:Rol</u>" as ri
+participant "<u>us:Usuario</u>" as us
+
+adm -> cgu ++ : modificarUsuario(nombreUsuario : String, nombreCompleto : String, nombreRol : TipoRol)
+group bucle [para cada usuario en usuarios]
+  cgu -> ui ++ : getNombreUsuario()
+  ui --> cgu -- : «nombre : String»
+end
+note right of cgu
+  si nombre = nombreUsuario
+  us = usuarios[i]
+  cortar iteración
+end note
+group bucle [para cada rol en roles]
+  cgu -> ri ++ : getNombreRol()
+  ri --> cgu -- : «nombre : TipoRol»
+end
+note right of cgu
+  si nombre = nombreRol
+  rol = roles[i]
+  cortar iteración
+end note
+cgu -> us ++ : modificar(nombreCompleto : String, rol : Rol)
+us --> cgu --
+cgu --> adm -- : «usuario modificado»
+
+@enduml
