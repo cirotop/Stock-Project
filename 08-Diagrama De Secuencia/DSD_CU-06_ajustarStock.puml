@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -22,12 +24,22 @@ skinparam NoteBorderColor black
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cas:ControladorAjustarStock</u>" as cas
 participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
 adm -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
 note right of cas : p es el producto obtenido en seleccionarProducto
 alt cantidadReal ≥ 0 y motivo cargado
   cas -> p ++ : buscarLote(nroLote : String)
+  group bucle [para cada lote en lotes]
+    p -> li ++ : getNroLote()
+    li --> p -- : «nro : String»
+  end
+  note right of p
+    si nro = nroLote
+    lt = lotes[i]
+    cortar iteración
+  end note
   p --> cas -- : «lt : Lote»
   create participant "<u>aj:AjusteStock</u>" as aj
   cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)

@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,14 +23,29 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>categorias[i]:Categoria</u>" as ci
+collections "<u>categorias:Categoria</u>" as mc <<multiobjeto>>
 
 adm -> cgc ++ : altaCategoria(nombreCategoria : String, descripcionCategoria : String)
 cgc -> cat ++ : buscarCategoria(nombreCategoria : String)
+group bucle [para cada categoria en categorias]
+  cat -> ci ++ : getNombreCategoria()
+  ci --> cat -- : «nombre : String»
+end
+note right of cat
+  si nombre = nombreCategoria
+  existente = categorias[i]
+  cortar iteración
+end note
 cat --> cgc -- : «existente : Categoria»
 alt existente = null (nombre disponible)
   create participant "<u>c:Categoria</u>" as c
   cgc -->> c : crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario)
+  cgc -> cat ++ : agregarCategoria(c : Categoria)
+  cat -> mc ++ : add(c : Categoria)
+  mc --> cat --
+  cat --> cgc --
   cgc --> adm : «categoría creada»
 else existente != null (nombre ya registrado)
   cgc --> adm : «"categoría ya registrada"»

@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,21 +23,24 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cas:ControladorAjustarStock</u>" as cas
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
-participant "<u>lotes[i]:Lote</u>" as li
 
 adm -> cas ++ : seleccionarProducto(codigoProducto : String)
 cas -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
 cat --> cas -- : «p : Producto»
 cas -> p ++ : getLotes()
 p --> cas -- : «lotes : Lote[]»
-group bucle [para cada lote en lotes]
-  cas -> li ++ : getFechaVencimiento()
-  li --> cas -- : «fechaVencimiento : Date»
-  cas -> li ++ : getCantidadLote()
-  li --> cas -- : «cantidadLote : int»
-end
-cas --> adm -- : «lotes (fechaVencimiento, cantidad)»
+cas --> adm -- : «lotes : Lote[]» (nroLote, fechaVencimiento y cantidad de cada uno)
 
 @enduml

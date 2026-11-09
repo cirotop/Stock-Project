@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,32 +23,42 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
+collections "<u>usuarios:Usuario</u>" as mu <<multiobjeto>>
 
 adm -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
+cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
-  cgu -> ui ++ : getNombreUsuario()
-  ui --> cgu -- : «nombre : String»
+  reg -> ui ++ : getNombreUsuario()
+  ui --> reg -- : «nombre : String»
 end
-note right of cgu
+note right of reg
   si nombre = nombreUsuario
   existente = usuarios[i]
   cortar iteración
 end note
+reg --> cgu -- : «existente : Usuario»
 alt existente = null (nombre disponible)
+  cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
   group bucle [para cada rol en roles]
-    cgu -> ri ++ : getNombreRol()
-    ri --> cgu -- : «nombre : TipoRol»
+    reg -> ri ++ : getNombreRol()
+    ri --> reg -- : «nombre : TipoRol»
   end
-  note right of cgu
+  note right of reg
     si nombre = nombreRol
     rol = roles[i]
     cortar iteración
   end note
+  reg --> cgu -- : «rol : Rol»
   create participant "<u>nu:Usuario</u>" as nu
   cgu -->> nu : crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, responsable : Usuario)
   note right of nu : guarda la contraseña cifrada (hash)
+  cgu -> reg ++ : agregarUsuario(nu : Usuario)
+  reg -> mu ++ : add(nu : Usuario)
+  mu --> reg --
+  reg --> cgu --
   cgu --> adm : «usuario creado»
 else existente != null (nombre ya usado)
   cgu --> adm : «"nombre de usuario no disponible"»

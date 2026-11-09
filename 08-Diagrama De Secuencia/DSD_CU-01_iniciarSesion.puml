@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,23 +23,26 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>ci:ControladorIniciarSesion</u>" as ci
+participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>us:Usuario</u>" as us
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>lotes[j]:Lote</u>" as li
 participant "<u>vencidos[k]:StockVencido</u>" as vi
 
 u -> ci ++ : iniciarSesion(nombreUsuario : String, contraseña : String)
+ci -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
-  ci -> ui ++ : getNombreUsuario()
-  ui --> ci -- : «nombre : String»
+  reg -> ui ++ : getNombreUsuario()
+  ui --> reg -- : «nombre : String»
 end
-note right of ci
+note right of reg
   si nombre = nombreUsuario
   us = usuarios[i]
   cortar iteración
 end note
+reg --> ci -- : «us : Usuario»
 note right of ci : el control de acceso compara la contraseña\ningresada con la almacenada (hash)
 alt us != null y contraseña correcta
   ci -> us ++ : estaActivo()

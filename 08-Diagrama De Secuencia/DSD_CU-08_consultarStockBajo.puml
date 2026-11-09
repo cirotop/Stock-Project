@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,7 +23,7 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>csb:ControladorConsultarStockBajo</u>" as csb
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 
 u -> csb ++ : consultarStockBajo()

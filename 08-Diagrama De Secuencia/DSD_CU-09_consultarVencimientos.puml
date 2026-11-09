@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,7 +23,7 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>ccv:ControladorConsultarVencimientos</u>" as ccv
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>lotes[j]:Lote</u>" as li
 participant "<u>vencidos[k]:StockVencido</u>" as vi
@@ -54,28 +56,30 @@ end
 note right of cat : si activo: agregar productos[i] al resultado
 cat --> ccv -- : «productos : Producto[]»
 group bucle [para cada producto en productos]
-  ccv -> pi ++ : getLotes()
-  pi --> ccv -- : «lotes : Lote[]»
+  ccv -> cat ++ : calcularStockVigente(p : Producto)
+  cat -> pi ++ : getLotes()
+  pi --> cat -- : «lotes : Lote[]»
   group bucle [para cada lote en lotes]
-    ccv -> li ++ : estaVencido(fecha : Date)
-    li --> ccv -- : «vencido : boolean»
-    ccv -> li ++ : getCantidadLote()
-    li --> ccv -- : «cantidadLote : int»
+    cat -> li ++ : estaVencido(fecha : Date)
+    li --> cat -- : «vencido : boolean»
+    cat -> li ++ : getCantidadLote()
+    li --> cat -- : «cantidadLote : int»
   end
+  note right of cat : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+  cat --> ccv -- : «stockVigente : int»
+  ccv -> cat ++ : calcularStockVencido(p : Producto)
+  group bucle [para cada stockVencido en vencidos]
+    cat -> vi ++ : getLote()
+    vi --> cat -- : «lv : Lote»
+    cat -> lv ++ : getProducto()
+    lv --> cat -- : «producto : Producto»
+    cat -> vi ++ : getCantidad()
+    vi --> cat -- : «cantidad : int»
+  end
+  note right of cat : si producto = p:\nstockVencido = stockVencido + cantidad
+  cat --> ccv -- : «stockVencido : int»
 end
-note right of ccv : si vencido = false:\nstockVigente(p) = stockVigente(p) + cantidadLote
-group bucle [para cada stockVencido en vencidos]
-  ccv -> vi ++ : getCantidad()
-  vi --> ccv -- : «cantidad : int»
-  ccv -> vi ++ : getLote()
-  vi --> ccv -- : «lv : Lote»
-  ccv -> lv ++ : getProducto()
-  lv --> ccv -- : «p : Producto»
-end
-note right of ccv
-  stockVencido(p) = stockVencido(p) + cantidad
-  totalFisico(p) = stockVigente(p) + stockVencido(p) (RN-19)
-end note
+note right of ccv : totalFisico = stockVigente + stockVencido (RN-19)
 alt proximos no está vacía
   ccv --> u : «lotes próximos a vencer»
 else proximos vacía

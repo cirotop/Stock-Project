@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,17 +23,42 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>categorias[i]:Categoria</u>" as ci
+collections "<u>productos:Producto</u>" as mp <<multiobjeto>>
 
 adm -> cgp ++ : altaProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
 cgp -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  existente = productos[i]
+  cortar iteración
+end note
 cat --> cgp -- : «existente : Producto»
 alt existente = null (código disponible)
   cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
+  group bucle [para cada categoria en categorias]
+    cat -> ci ++ : getNombreCategoria()
+    ci --> cat -- : «nombre : String»
+  end
+  note right of cat
+    si nombre = nombreCategoria
+    categoria = categorias[i]
+    cortar iteración
+  end note
   cat --> cgp -- : «categoria : Categoria»
   create participant "<u>p:Producto</u>" as p
   cgp -->> p : crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, responsable : Usuario)
   note right of p : queda activo y sin lotes\n(stock vigente = 0, RN-08)
+  cgp -> cat ++ : agregarProducto(p : Producto)
+  cat -> mp ++ : add(p : Producto)
+  mp --> cat --
+  cat --> cgp --
   cgp --> adm : «producto creado»
 else existente != null (código ya registrado, RN-09)
   cgp --> adm : «"código ya registrado"»

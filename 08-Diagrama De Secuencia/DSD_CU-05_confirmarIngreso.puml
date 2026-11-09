@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,9 +23,11 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
+collections "<u>lotes:Lote</u>" as ml <<multiobjeto>>
 
 u -> cri ++ : confirmarIngreso()
 note right of cri : usa p, lt, nroLote, cantidad y fechaVencimiento\nobtenidos en registrarIngreso
@@ -33,20 +37,26 @@ cri -> ing ++ : aplicar()
 alt lt = null (lote nuevo)
   create participant "<u>nl:Lote</u>" as nl
   ing -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
+  ing -> p ++ : agregarLote(nl : Lote)
+  p -> ml ++ : add(nl : Lote)
+  ml --> p --
+  p --> ing --
 else lt != null (se suma al lote existente)
   ing -> lt ++ : aumentarCantidad(cantidad : int)
   lt --> ing -- : «cantidadLote : int»
 end
 ing --> cri -- : «true»
-cri -> p ++ : getLotes()
-p --> cri -- : «lotes : Lote[]»
+cri -> cat ++ : calcularStockVigente(p : Producto)
+cat -> p ++ : getLotes()
+p --> cat -- : «lotes : Lote[]»
 group bucle [para cada lote en lotes]
-  cri -> li ++ : estaVencido(fecha : Date)
-  li --> cri -- : «vencido : boolean»
-  cri -> li ++ : getCantidadLote()
-  li --> cri -- : «cantidadLote : int»
+  cat -> li ++ : estaVencido(fecha : Date)
+  li --> cat -- : «vencido : boolean»
+  cat -> li ++ : getCantidadLote()
+  li --> cat -- : «cantidadLote : int»
 end
-note right of cri : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+note right of cat : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+cat --> cri -- : «stockVigente : int»
 cri --> u -- : «ingreso registrado + stockVigente»
 
 @enduml

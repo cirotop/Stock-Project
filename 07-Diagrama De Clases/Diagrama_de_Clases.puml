@@ -47,6 +47,13 @@ class Rol {
   + tienePermisoTotal() : boolean
 }
 
+class RegistroDeUsuarios <<Singleton>> {
+  --
+  + buscarUsuario(nombreUsuario : String) : Usuario
+  + buscarRol(nombreRol : TipoRol) : Rol
+  + agregarUsuario(usuario : Usuario) : void
+}
+
 class Usuario {
   - nombreUsuario : String  <<clave>>
   - contraseña : String
@@ -67,14 +74,19 @@ class Usuario {
 ' consultas/listados del inventario (buscar, stock bajo, vencimientos). Asi un
 ' Producto solo conserva sus propios datos y no se encarga de juntar ni contar.
 
-class Catalogo {
+class Catalogo <<Singleton>> {
   --
   + buscarProducto(codigoProducto : String) : Producto
   + buscarCategoria(nombreCategoria : String) : Categoria
+  + buscarStockVencido(codigoEtiqueta : String) : StockVencido
+  + agregarProducto(producto : Producto) : void
+  + agregarCategoria(categoria : Categoria) : void
   + listarProductos() : Producto[]
   + listarStockBajo() : Producto[]
   + listarProximosAVencer(dias : int) : Lote[]
   + listarVencidos() : StockVencido[]
+  + calcularStockVigente(producto : Producto) : int
+  + calcularStockVencido(producto : Producto) : int
 }
 
 class Categoria {
@@ -83,6 +95,7 @@ class Categoria {
   --
   + {static} crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario) : Categoria
   + modificar(nombreCategoria : String, descripcionCategoria : String) : void
+  + getNombreCategoria() : String
   + listarProductos() : Producto[]
 }
 
@@ -97,7 +110,9 @@ class Producto {
   + modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : void
   + darBaja() : void
   + buscarLote(nroLote : String) : Lote
+  + agregarLote(lote : Lote) : void
   + getLotes() : Lote[]
+  + getCodigoProducto() : String
   + tieneStockBajo() : boolean
   + estaActivo() : boolean
 }
@@ -113,6 +128,7 @@ class Lote {
   + vencer(codigoEtiqueta : String) : StockVencido
   + estaVencido(fecha : Date) : boolean
   + estaProximoAVencer(dias : int) : boolean
+  + getNroLote() : String
   + getCantidadLote() : int
   + getFechaVencimiento() : Date
   + getProducto() : Producto
@@ -178,10 +194,13 @@ class RetiroVencido {
 ' ===================== Relaciones =====================
 
 Rol "1" -- "0..*" Usuario : asigna >
+RegistroDeUsuarios "1" o-- "0..*" Usuario : registra >
+RegistroDeUsuarios "1" o-- "0..*" Rol : contiene >
 Rol ..> TipoRol
 
 Catalogo "1" o-- "0..*" Categoria : organiza >
 Catalogo "1" o-- "0..*" Producto : contiene >
+Catalogo "1" o-- "0..*" StockVencido : guarda vencidos >
 Categoria "1" -- "0..*" Producto : clasifica >
 Producto "1" *-- "0..*" Lote : se agrupa en >
 Lote "1" -- "0..1" StockVencido : vence en >
@@ -199,7 +218,8 @@ RetiroVencido "0..*" --> "1" StockVencido : descuenta >
 note bottom of Usuario
   La autenticacion y el cierre de sesion los maneja el
   sistema (control de acceso), no la entidad Usuario:
-  por eso no son operaciones de esta clase.
+  por eso no son operaciones de esta clase. El usuario
+  se busca en RegistroDeUsuarios.
   RN-11: el alta, la modificacion y la baja de roles,
   usuarios, categorias y productos, y el ajuste de stock,
   exigen un usuario Administrador. Cada operacion lo
@@ -209,10 +229,13 @@ note bottom of Usuario
 end note
 
 note bottom of Catalogo
-  El Catalogo centraliza las consultas del inventario que no son
-  de un producto puntual: buscar, listar, y los avisos de stock
-  bajo y de vencimientos (recorriendo los lotes de cada producto).
+  El Catalogo (Singleton) centraliza las consultas del inventario que
+  no son de un producto puntual: buscar, listar, calcular el stock
+  vigente y vencido de un producto, y los avisos de stock bajo y de
+  vencimientos (recorriendo los lotes de cada producto).
   Asi Producto no se encarga de juntar ni contar.
+  RegistroDeUsuarios (Singleton) cumple el mismo papel para
+  usuarios y roles.
 end note
 
 note bottom of Lote

@@ -48,6 +48,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -60,23 +62,26 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>ci:ControladorIniciarSesion</u>" as ci
+participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>us:Usuario</u>" as us
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>lotes[j]:Lote</u>" as li
 participant "<u>vencidos[k]:StockVencido</u>" as vi
 
 u -> ci ++ : iniciarSesion(nombreUsuario : String, contraseña : String)
+ci -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
-  ci -> ui ++ : getNombreUsuario()
-  ui --> ci -- : «nombre : String»
+  reg -> ui ++ : getNombreUsuario()
+  ui --> reg -- : «nombre : String»
 end
-note right of ci
+note right of reg
   si nombre = nombreUsuario
   us = usuarios[i]
   cortar iteración
 end note
+reg --> ci -- : «us : Usuario»
 note right of ci : el control de acceso compara la contraseña\ningresada con la almacenada (hash)
 alt us != null y contraseña correcta
   ci -> us ++ : estaActivo()
@@ -149,6 +154,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -161,32 +168,42 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
+collections "<u>usuarios:Usuario</u>" as mu <<multiobjeto>>
 
 adm -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
+cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
-  cgu -> ui ++ : getNombreUsuario()
-  ui --> cgu -- : «nombre : String»
+  reg -> ui ++ : getNombreUsuario()
+  ui --> reg -- : «nombre : String»
 end
-note right of cgu
+note right of reg
   si nombre = nombreUsuario
   existente = usuarios[i]
   cortar iteración
 end note
+reg --> cgu -- : «existente : Usuario»
 alt existente = null (nombre disponible)
+  cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
   group bucle [para cada rol en roles]
-    cgu -> ri ++ : getNombreRol()
-    ri --> cgu -- : «nombre : TipoRol»
+    reg -> ri ++ : getNombreRol()
+    ri --> reg -- : «nombre : TipoRol»
   end
-  note right of cgu
+  note right of reg
     si nombre = nombreRol
     rol = roles[i]
     cortar iteración
   end note
+  reg --> cgu -- : «rol : Rol»
   create participant "<u>nu:Usuario</u>" as nu
   cgu -->> nu : crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, responsable : Usuario)
   note right of nu : guarda la contraseña cifrada (hash)
+  cgu -> reg ++ : agregarUsuario(nu : Usuario)
+  reg -> mu ++ : add(nu : Usuario)
+  mu --> reg --
+  reg --> cgu --
   cgu --> adm : «usuario creado»
 else existente != null (nombre ya usado)
   cgu --> adm : «"nombre de usuario no disponible"»
@@ -217,6 +234,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -229,29 +248,34 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
 participant "<u>us:Usuario</u>" as us
 
 adm -> cgu ++ : modificarUsuario(nombreUsuario : String, nombreCompleto : String, nombreRol : TipoRol)
+cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
-  cgu -> ui ++ : getNombreUsuario()
-  ui --> cgu -- : «nombre : String»
+  reg -> ui ++ : getNombreUsuario()
+  ui --> reg -- : «nombre : String»
 end
-note right of cgu
+note right of reg
   si nombre = nombreUsuario
   us = usuarios[i]
   cortar iteración
 end note
+reg --> cgu -- : «us : Usuario»
+cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
 group bucle [para cada rol en roles]
-  cgu -> ri ++ : getNombreRol()
-  ri --> cgu -- : «nombre : TipoRol»
+  reg -> ri ++ : getNombreRol()
+  ri --> reg -- : «nombre : TipoRol»
 end
-note right of cgu
+note right of reg
   si nombre = nombreRol
   rol = roles[i]
   cortar iteración
 end note
+reg --> cgu -- : «rol : Rol»
 cgu -> us ++ : modificar(nombreCompleto : String, rol : Rol)
 us --> cgu --
 cgu --> adm -- : «usuario modificado»
@@ -280,6 +304,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -292,19 +318,22 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>us:Usuario</u>" as us
 
 adm -> cgu ++ : darBajaUsuario(nombreUsuario : String)
+cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
-  cgu -> ui ++ : getNombreUsuario()
-  ui --> cgu -- : «nombre : String»
+  reg -> ui ++ : getNombreUsuario()
+  ui --> reg -- : «nombre : String»
 end
-note right of cgu
+note right of reg
   si nombre = nombreUsuario
   us = usuarios[i]
   cortar iteración
 end note
+reg --> cgu -- : «us : Usuario»
 cgu -> us ++ : darBaja()
 note right of us : baja lógica: estadoUsuario = inactivo
 us --> cgu --
@@ -338,6 +367,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -350,14 +381,29 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>categorias[i]:Categoria</u>" as ci
+collections "<u>categorias:Categoria</u>" as mc <<multiobjeto>>
 
 adm -> cgc ++ : altaCategoria(nombreCategoria : String, descripcionCategoria : String)
 cgc -> cat ++ : buscarCategoria(nombreCategoria : String)
+group bucle [para cada categoria en categorias]
+  cat -> ci ++ : getNombreCategoria()
+  ci --> cat -- : «nombre : String»
+end
+note right of cat
+  si nombre = nombreCategoria
+  existente = categorias[i]
+  cortar iteración
+end note
 cat --> cgc -- : «existente : Categoria»
 alt existente = null (nombre disponible)
   create participant "<u>c:Categoria</u>" as c
   cgc -->> c : crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario)
+  cgc -> cat ++ : agregarCategoria(c : Categoria)
+  cat -> mc ++ : add(c : Categoria)
+  mc --> cat --
+  cat --> cgc --
   cgc --> adm : «categoría creada»
 else existente != null (nombre ya registrado)
   cgc --> adm : «"categoría ya registrada"»
@@ -388,6 +434,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -400,11 +448,21 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>categorias[i]:Categoria</u>" as ci
 participant "<u>c:Categoria</u>" as c
 
 adm -> cgc ++ : modificarCategoria(nombreActual : String, nombreCategoria : String, descripcionCategoria : String)
 cgc -> cat ++ : buscarCategoria(nombreActual : String)
+group bucle [para cada categoria en categorias]
+  cat -> ci ++ : getNombreCategoria()
+  ci --> cat -- : «nombre : String»
+end
+note right of cat
+  si nombre = nombreActual
+  c = categorias[i]
+  cortar iteración
+end note
 cat --> cgc -- : «c : Categoria»
 cgc -> c ++ : modificar(nombreCategoria : String, descripcionCategoria : String)
 c --> cgc --
@@ -438,6 +496,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -450,17 +510,42 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>categorias[i]:Categoria</u>" as ci
+collections "<u>productos:Producto</u>" as mp <<multiobjeto>>
 
 adm -> cgp ++ : altaProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
 cgp -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  existente = productos[i]
+  cortar iteración
+end note
 cat --> cgp -- : «existente : Producto»
 alt existente = null (código disponible)
   cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
+  group bucle [para cada categoria en categorias]
+    cat -> ci ++ : getNombreCategoria()
+    ci --> cat -- : «nombre : String»
+  end
+  note right of cat
+    si nombre = nombreCategoria
+    categoria = categorias[i]
+    cortar iteración
+  end note
   cat --> cgp -- : «categoria : Categoria»
   create participant "<u>p:Producto</u>" as p
   cgp -->> p : crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, responsable : Usuario)
   note right of p : queda activo y sin lotes\n(stock vigente = 0, RN-08)
+  cgp -> cat ++ : agregarProducto(p : Producto)
+  cat -> mp ++ : add(p : Producto)
+  mp --> cat --
+  cat --> cgp --
   cgp --> adm : «producto creado»
 else existente != null (código ya registrado, RN-09)
   cgp --> adm : «"código ya registrado"»
@@ -491,6 +576,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -503,13 +590,33 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>categorias[i]:Categoria</u>" as ci
 participant "<u>p:Producto</u>" as p
 
 adm -> cgp ++ : modificarProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
 cgp -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
 cat --> cgp -- : «p : Producto»
 cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
+group bucle [para cada categoria en categorias]
+  cat -> ci ++ : getNombreCategoria()
+  ci --> cat -- : «nombre : String»
+end
+note right of cat
+  si nombre = nombreCategoria
+  categoria = categorias[i]
+  cortar iteración
+end note
 cat --> cgp -- : «categoria : Categoria»
 cgp -> p ++ : modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int)
 p --> cgp --
@@ -539,6 +646,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -551,11 +660,21 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 
 adm -> cgp ++ : darBajaProducto(codigoProducto : String)
 cgp -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
 cat --> cgp -- : «p : Producto»
 cgp -> p ++ : darBaja()
 note right of p : baja lógica: estadoProducto = inactivo (RN-10)
@@ -592,6 +711,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -604,12 +725,23 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
 u -> cri ++ : registrarIngreso(codigoProducto : String, nroLote : String, cantidad : int, fechaVencimiento : Date)
 cri -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
 cat --> cri -- : «p : Producto»
 alt p = null (producto no existe)
   cri --> u : «ofrece dar de alta el producto (CU-04) o cancelar»
@@ -617,6 +749,15 @@ else cantidad inválida, o falta nroLote o fechaVencimiento
   cri --> u : «"dato inválido o incompleto"»
 else producto existe y datos válidos
   cri -> p ++ : buscarLote(nroLote : String)
+  group bucle [para cada lote en lotes]
+    p -> li ++ : getNroLote()
+    li --> p -- : «nro : String»
+  end
+  note right of p
+    si nro = nroLote
+    lt = lotes[i]
+    cortar iteración
+  end note
   p --> cri -- : «lt : Lote»
   opt lt != null (el lote ya existe)
     cri -> lt ++ : getFechaVencimiento()
@@ -651,6 +792,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -663,9 +806,11 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
+collections "<u>lotes:Lote</u>" as ml <<multiobjeto>>
 
 u -> cri ++ : confirmarIngreso()
 note right of cri : usa p, lt, nroLote, cantidad y fechaVencimiento\nobtenidos en registrarIngreso
@@ -675,20 +820,26 @@ cri -> ing ++ : aplicar()
 alt lt = null (lote nuevo)
   create participant "<u>nl:Lote</u>" as nl
   ing -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
+  ing -> p ++ : agregarLote(nl : Lote)
+  p -> ml ++ : add(nl : Lote)
+  ml --> p --
+  p --> ing --
 else lt != null (se suma al lote existente)
   ing -> lt ++ : aumentarCantidad(cantidad : int)
   lt --> ing -- : «cantidadLote : int»
 end
 ing --> cri -- : «true»
-cri -> p ++ : getLotes()
-p --> cri -- : «lotes : Lote[]»
+cri -> cat ++ : calcularStockVigente(p : Producto)
+cat -> p ++ : getLotes()
+p --> cat -- : «lotes : Lote[]»
 group bucle [para cada lote en lotes]
-  cri -> li ++ : estaVencido(fecha : Date)
-  li --> cri -- : «vencido : boolean»
-  cri -> li ++ : getCantidadLote()
-  li --> cri -- : «cantidadLote : int»
+  cat -> li ++ : estaVencido(fecha : Date)
+  li --> cat -- : «vencido : boolean»
+  cat -> li ++ : getCantidadLote()
+  li --> cat -- : «cantidadLote : int»
 end
-note right of cri : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+note right of cat : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+cat --> cri -- : «stockVigente : int»
 cri --> u -- : «ingreso registrado + stockVigente»
 
 @enduml
@@ -721,6 +872,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -733,22 +886,25 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cas:ControladorAjustarStock</u>" as cas
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
-participant "<u>lotes[i]:Lote</u>" as li
 
 adm -> cas ++ : seleccionarProducto(codigoProducto : String)
 cas -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
 cat --> cas -- : «p : Producto»
 cas -> p ++ : getLotes()
 p --> cas -- : «lotes : Lote[]»
-group bucle [para cada lote en lotes]
-  cas -> li ++ : getFechaVencimiento()
-  li --> cas -- : «fechaVencimiento : Date»
-  cas -> li ++ : getCantidadLote()
-  li --> cas -- : «cantidadLote : int»
-end
-cas --> adm -- : «lotes (fechaVencimiento, cantidad)»
+cas --> adm -- : «lotes : Lote[]» (nroLote, fechaVencimiento y cantidad de cada uno)
 
 @enduml
 ```
@@ -774,6 +930,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -787,12 +945,22 @@ skinparam NoteBorderColor black
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cas:ControladorAjustarStock</u>" as cas
 participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
 adm -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
 note right of cas : p es el producto obtenido en seleccionarProducto
 alt cantidadReal ≥ 0 y motivo cargado
   cas -> p ++ : buscarLote(nroLote : String)
+  group bucle [para cada lote en lotes]
+    p -> li ++ : getNroLote()
+    li --> p -- : «nro : String»
+  end
+  note right of p
+    si nro = nroLote
+    lt = lotes[i]
+    cortar iteración
+  end note
   p --> cas -- : «lt : Lote»
   create participant "<u>aj:AjusteStock</u>" as aj
   cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
@@ -839,6 +1007,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -851,29 +1021,26 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>vencidos[i]:StockVencido</u>" as vi
 participant "<u>sv:StockVencido</u>" as sv
 participant "<u>lt:Lote</u>" as lt
 
 note over u : el laboratorio retira físicamente la mercadería\ndel depósito (no interactúa con el sistema)
 u -> crv ++ : leerEtiqueta(codigoEtiqueta : String)
-crv -> cat ++ : listarVencidos()
+crv -> cat ++ : buscarStockVencido(codigoEtiqueta : String)
 group bucle [para cada stockVencido en vencidos]
+  cat -> vi ++ : getCodigoEtiqueta()
+  vi --> cat -- : «codigo : String»
   cat -> vi ++ : estaRetirado()
   vi --> cat -- : «retirado : boolean»
 end
-note right of cat : si retirado = false:\nagregar vencidos[i] al resultado
-cat --> crv -- : «vencidos : StockVencido[]»
-group bucle [para cada stockVencido en vencidos]
-  crv -> vi ++ : getCodigoEtiqueta()
-  vi --> crv -- : «codigo : String»
-end
-note right of crv
-  si codigo = codigoEtiqueta
+note right of cat
+  si codigo = codigoEtiqueta y retirado = false
   sv = vencidos[i]
   cortar iteración
 end note
+cat --> crv -- : «sv : StockVencido»
 alt sv != null (etiqueta encontrada)
   crv -> sv ++ : getLote()
   sv --> crv -- : «lt : Lote»
@@ -913,6 +1080,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -970,6 +1139,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -982,7 +1153,7 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>csb:ControladorConsultarStockBajo</u>" as csb
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 
 u -> csb ++ : consultarStockBajo()
@@ -1032,6 +1203,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -1044,7 +1217,7 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>ccv:ControladorConsultarVencimientos</u>" as ccv
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>lotes[j]:Lote</u>" as li
 participant "<u>vencidos[k]:StockVencido</u>" as vi
@@ -1077,28 +1250,30 @@ end
 note right of cat : si activo: agregar productos[i] al resultado
 cat --> ccv -- : «productos : Producto[]»
 group bucle [para cada producto en productos]
-  ccv -> pi ++ : getLotes()
-  pi --> ccv -- : «lotes : Lote[]»
+  ccv -> cat ++ : calcularStockVigente(p : Producto)
+  cat -> pi ++ : getLotes()
+  pi --> cat -- : «lotes : Lote[]»
   group bucle [para cada lote en lotes]
-    ccv -> li ++ : estaVencido(fecha : Date)
-    li --> ccv -- : «vencido : boolean»
-    ccv -> li ++ : getCantidadLote()
-    li --> ccv -- : «cantidadLote : int»
+    cat -> li ++ : estaVencido(fecha : Date)
+    li --> cat -- : «vencido : boolean»
+    cat -> li ++ : getCantidadLote()
+    li --> cat -- : «cantidadLote : int»
   end
+  note right of cat : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+  cat --> ccv -- : «stockVigente : int»
+  ccv -> cat ++ : calcularStockVencido(p : Producto)
+  group bucle [para cada stockVencido en vencidos]
+    cat -> vi ++ : getLote()
+    vi --> cat -- : «lv : Lote»
+    cat -> lv ++ : getProducto()
+    lv --> cat -- : «producto : Producto»
+    cat -> vi ++ : getCantidad()
+    vi --> cat -- : «cantidad : int»
+  end
+  note right of cat : si producto = p:\nstockVencido = stockVencido + cantidad
+  cat --> ccv -- : «stockVencido : int»
 end
-note right of ccv : si vencido = false:\nstockVigente(p) = stockVigente(p) + cantidadLote
-group bucle [para cada stockVencido en vencidos]
-  ccv -> vi ++ : getCantidad()
-  vi --> ccv -- : «cantidad : int»
-  ccv -> vi ++ : getLote()
-  vi --> ccv -- : «lv : Lote»
-  ccv -> lv ++ : getProducto()
-  lv --> ccv -- : «p : Producto»
-end
-note right of ccv
-  stockVencido(p) = stockVencido(p) + cantidad
-  totalFisico(p) = stockVigente(p) + stockVencido(p) (RN-19)
-end note
+note right of ccv : totalFisico = stockVigente + stockVencido (RN-19)
 alt proximos no está vacía
   ccv --> u : «lotes próximos a vencer»
 else proximos vacía

@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,11 +23,21 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>categorias[i]:Categoria</u>" as ci
 participant "<u>c:Categoria</u>" as c
 
 adm -> cgc ++ : modificarCategoria(nombreActual : String, nombreCategoria : String, descripcionCategoria : String)
 cgc -> cat ++ : buscarCategoria(nombreActual : String)
+group bucle [para cada categoria en categorias]
+  cat -> ci ++ : getNombreCategoria()
+  ci --> cat -- : «nombre : String»
+end
+note right of cat
+  si nombre = nombreActual
+  c = categorias[i]
+  cortar iteración
+end note
 cat --> cgc -- : «c : Categoria»
 cgc -> c ++ : modificar(nombreCategoria : String, descripcionCategoria : String)
 c --> cgc --

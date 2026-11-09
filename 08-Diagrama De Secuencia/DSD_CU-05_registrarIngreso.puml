@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,12 +23,23 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
 u -> cri ++ : registrarIngreso(codigoProducto : String, nroLote : String, cantidad : int, fechaVencimiento : Date)
 cri -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
 cat --> cri -- : «p : Producto»
 alt p = null (producto no existe)
   cri --> u : «ofrece dar de alta el producto (CU-04) o cancelar»
@@ -34,6 +47,15 @@ else cantidad inválida, o falta nroLote o fechaVencimiento
   cri --> u : «"dato inválido o incompleto"»
 else producto existe y datos válidos
   cri -> p ++ : buscarLote(nroLote : String)
+  group bucle [para cada lote en lotes]
+    p -> li ++ : getNroLote()
+    li --> p -- : «nro : String»
+  end
+  note right of p
+    si nro = nroLote
+    lt = lotes[i]
+    cortar iteración
+  end note
   p --> cri -- : «lt : Lote»
   opt lt != null (el lote ya existe)
     cri -> lt ++ : getFechaVencimiento()

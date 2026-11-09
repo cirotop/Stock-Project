@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,29 +23,26 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>vencidos[i]:StockVencido</u>" as vi
 participant "<u>sv:StockVencido</u>" as sv
 participant "<u>lt:Lote</u>" as lt
 
 note over u : el laboratorio retira físicamente la mercadería\ndel depósito (no interactúa con el sistema)
 u -> crv ++ : leerEtiqueta(codigoEtiqueta : String)
-crv -> cat ++ : listarVencidos()
+crv -> cat ++ : buscarStockVencido(codigoEtiqueta : String)
 group bucle [para cada stockVencido en vencidos]
+  cat -> vi ++ : getCodigoEtiqueta()
+  vi --> cat -- : «codigo : String»
   cat -> vi ++ : estaRetirado()
   vi --> cat -- : «retirado : boolean»
 end
-note right of cat : si retirado = false:\nagregar vencidos[i] al resultado
-cat --> crv -- : «vencidos : StockVencido[]»
-group bucle [para cada stockVencido en vencidos]
-  crv -> vi ++ : getCodigoEtiqueta()
-  vi --> crv -- : «codigo : String»
-end
-note right of crv
-  si codigo = codigoEtiqueta
+note right of cat
+  si codigo = codigoEtiqueta y retirado = false
   sv = vencidos[i]
   cortar iteración
 end note
+cat --> crv -- : «sv : StockVencido»
 alt sv != null (etiqueta encontrada)
   crv -> sv ++ : getLote()
   sv --> crv -- : «lt : Lote»

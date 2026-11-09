@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,19 +23,22 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>us:Usuario</u>" as us
 
 adm -> cgu ++ : darBajaUsuario(nombreUsuario : String)
+cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
-  cgu -> ui ++ : getNombreUsuario()
-  ui --> cgu -- : «nombre : String»
+  reg -> ui ++ : getNombreUsuario()
+  ui --> reg -- : «nombre : String»
 end
-note right of cgu
+note right of reg
   si nombre = nombreUsuario
   us = usuarios[i]
   cortar iteración
 end note
+reg --> cgu -- : «us : Usuario»
 cgu -> us ++ : darBaja()
 note right of us : baja lógica: estadoUsuario = inactivo
 us --> cgu --

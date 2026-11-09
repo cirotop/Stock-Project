@@ -9,6 +9,8 @@ skinparam sequenceMessageAlign center
 skinparam ArrowColor black
 skinparam ParticipantBackgroundColor white
 skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
 skinparam ActorBackgroundColor white
 skinparam ActorBorderColor black
 skinparam LifeLineBorderColor black
@@ -21,11 +23,21 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
-participant "<u>cat:Catalogo</u>" as cat
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 
 adm -> cgp ++ : darBajaProducto(codigoProducto : String)
 cgp -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
 cat --> cgp -- : «p : Producto»
 cgp -> p ++ : darBaja()
 note right of p : baja lógica: estadoProducto = inactivo (RN-10)
