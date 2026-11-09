@@ -41,12 +41,22 @@ Los **procesos automáticos** (vencimiento de lote, alertas) no se diagraman por
 ' Diagrama de Secuencia de Diseño (DSD) - CU-01 Iniciar sesión - iniciarSesion
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>ci:ControladorIniciarSesion</u>" as ci
@@ -132,12 +142,22 @@ deactivate ci
 ' Diagrama de Secuencia de Diseño (DSD) - CU-02 Gestionar usuario - altaUsuario
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
@@ -190,12 +210,22 @@ deactivate cgu
 ' Diagrama de Secuencia de Diseño (DSD) - CU-02 Gestionar usuario - modificarUsuario
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
@@ -243,12 +273,22 @@ cgu --> adm -- : «usuario modificado»
 ' Diagrama de Secuencia de Diseño (DSD) - CU-02 Gestionar usuario - darBajaUsuario
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
@@ -291,12 +331,22 @@ cgu --> adm -- : «usuario dado de baja»
 ' Diagrama de Secuencia de Diseño (DSD) - CU-03 Gestionar categoría - altaCategoria
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
@@ -331,12 +381,22 @@ deactivate cgc
 ' Diagrama de Secuencia de Diseño (DSD) - CU-03 Gestionar categoría - modificarCategoria
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
@@ -371,12 +431,22 @@ cgc --> adm -- : «categoría modificada»
 ' Diagrama de Secuencia de Diseño (DSD) - CU-04 Gestionar producto - altaProducto
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
@@ -414,12 +484,22 @@ deactivate cgp
 ' Diagrama de Secuencia de Diseño (DSD) - CU-04 Gestionar producto - modificarProducto
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
@@ -452,12 +532,22 @@ cgp --> adm -- : «producto modificado»
 ' Diagrama de Secuencia de Diseño (DSD) - CU-04 Gestionar producto - darBajaProducto
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
@@ -495,12 +585,22 @@ El usuario hace dos operaciones: primero carga los datos y el sistema le muestra
 ' Diagrama de Secuencia de Diseño (DSD) - CU-05 Registrar ingreso de mercadería - registrarIngreso
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
@@ -544,12 +644,22 @@ deactivate cri
 ' Diagrama de Secuencia de Diseño (DSD) - CU-05 Registrar ingreso de mercadería - confirmarIngreso
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
@@ -604,12 +714,22 @@ cri --> u -- : «ingreso registrado + stockVigente»
 ' Diagrama de Secuencia de Diseño (DSD) - CU-06 Ajustar stock - seleccionarProducto
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cas:ControladorAjustarStock</u>" as cas
@@ -647,12 +767,22 @@ cas --> adm -- : «lotes (fechaVencimiento, cantidad)»
 ' Diagrama de Secuencia de Diseño (DSD) - CU-06 Ajustar stock - ajustarStock
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cas:ControladorAjustarStock</u>" as cas
@@ -702,12 +832,22 @@ deactivate cas
 ' Diagrama de Secuencia de Diseño (DSD) - CU-07 Registrar retiro de mercadería vencida - leerEtiqueta
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
@@ -766,12 +906,22 @@ deactivate crv
 ' Diagrama de Secuencia de Diseño (DSD) - CU-07 Registrar retiro de mercadería vencida - registrarRetiro
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
@@ -813,12 +963,22 @@ deactivate crv
 ' Diagrama de Secuencia de Diseño (DSD) - CU-08 Consultar productos con stock bajo - consultarStockBajo
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>csb:ControladorConsultarStockBajo</u>" as csb
@@ -865,12 +1025,22 @@ deactivate csb
 ' Diagrama de Secuencia de Diseño (DSD) - CU-09 Consultar vencimientos y stock vencido - consultarVencimientos
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>ccv:ControladorConsultarVencimientos</u>" as ccv

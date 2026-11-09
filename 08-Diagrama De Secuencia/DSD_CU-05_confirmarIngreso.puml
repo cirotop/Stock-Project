@@ -2,12 +2,22 @@
 ' Diagrama de Secuencia de Diseño (DSD) - CU-05 Registrar ingreso de mercadería - confirmarIngreso
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
-skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 12
 skinparam sequenceMessageAlign center
-skinparam ParticipantPadding 12
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
