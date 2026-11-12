@@ -1,20 +1,5 @@
 # Diagramas de Secuencia de Diseño (DSD) - Stock Proyect
 
-Diagramas hechos en **PlantUML** siguiendo los ejemplos de `crearNuevaVenta` e `introducirArticulo` de la teoría. Hay **un diagrama por operación del sistema**: cada uno se muestra como imagen y debajo tiene su código (desplegable *Código PlantUML*).
-
-## Convenciones (las de la teoría)
-
-- **Un DSD por operación del sistema**: empieza con un único mensaje del actor al controlador y termina con su retorno. Si una operación usa algo que obtuvo la anterior, el controlador lo conserva (como `ventaActual`).
-- **Controlador** por caso de uso (`cpv:ControladorProcesarVenta` en la teoría): es el único que habla con el actor y delega hacia la derecha.
-- Objetos como `nombre:Clase` **subrayados**, con líneas de vida punteadas. El actor es el rol (`adm:Administrador`).
-- Flecha llena: mensaje con sus parámetros tipados. Flecha punteada: retorno `«valor : Tipo»` (sin texto si no devuelve nada).
-- **Ninguna flecha sale y vuelve a la misma línea de vida**: los cálculos y comparaciones van en una nota, como `subtotal = subtotal + (cantidad * precio)`.
-- **Búsquedas y listados**: el dueño de la colección (el Catálogo, como `cp:CatalogoDeProductos` en la teoría) la recorre en un marco `bucle [para cada ...]`, le pide a cada `coleccion[i]` el dato con su getter, y una nota dice qué hace: `si ... cortar iteración` en una búsqueda, `agregar al resultado` en un listado. El objeto encontrado es otra línea de vida, como `especif[i]` y `ep`.
-- `crear(...)` / `registrar(...)`: flecha punteada de creación; la caja del objeto nuevo aparece a esa altura.
-- Marcos `alt`, `opt` y `bucle` con su condición de guarda, según la tabla de operadores de la teoría.
-
-Los **procesos automáticos** (vencimiento de lote, alertas) no se diagraman porque no los inicia un actor. Los **controladores** son clases de diseño y no figuran en el [Diagrama de Clases](../07-Diagrama%20De%20Clases/Diagrama_de_Clases.puml), que modela solo el dominio; todos los métodos que los DSD invocan sobre objetos del dominio existen en el DCC.
-
 ## Índice
 
 - **CU-01 - Iniciar sesión**: `iniciarSesion`
