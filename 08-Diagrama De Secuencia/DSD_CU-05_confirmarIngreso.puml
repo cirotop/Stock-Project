@@ -30,10 +30,21 @@ participant "<u>lt:Lote</u>" as lt
 collections "<u>lotes:Lote</u>" as ml <<multiobjeto>>
 
 u -> cri ++ : confirmarIngreso()
-note right of cri : usa p, lt, nroLote, cantidad y fechaVencimiento\nobtenidos en registrarIngreso
+note right of cri : usa p, nroLote, cantidad y fechaVencimiento\nobtenidos en registrarIngreso
 create participant "<u>ing:IngresoMercaderia</u>" as ing
 cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
 cri -> ing ++ : aplicar()
+ing -> p ++ : buscarLote(nroLote : String)
+group bucle [para cada lote en lotes]
+  p -> li ++ : getNroLote()
+  li --> p -- : «nro : String»
+end
+note right of p
+  si nro = nroLote
+  lt = lotes[i]
+  cortar iteración
+end note
+p --> ing -- : «lt : Lote»
 alt lt = null (lote nuevo)
   create participant "<u>nl:Lote</u>" as nl
   ing -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)

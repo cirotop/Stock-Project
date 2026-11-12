@@ -23,6 +23,7 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cas:ControladorAjustarStock</u>" as cas
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
@@ -47,12 +48,21 @@ alt cantidadReal ≥ 0 y motivo cargado
   aj -> lt ++ : corregirCantidad(cantidadReal : int)
   lt --> aj -- : «cantidadLote : int»
   aj --> cas -- : «true»
+  cas -> cat ++ : calcularStockVigente(p : Producto)
+  cat -> p ++ : getLotes()
+  p --> cat -- : «lotes : Lote[]»
+  group bucle [para cada lote en lotes]
+    cat -> li ++ : estaVencido(fecha : Date)
+    li --> cat -- : «vencido : boolean»
+    cat -> li ++ : getCantidadLote()
+    li --> cat -- : «cantidadLote : int»
+  end
+  note right of cat : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+  cat --> cas -- : «stockVigente : int»
   cas -> p ++ : tieneStockBajo()
   p --> cas -- : «stockBajo : boolean»
-  opt stockBajo = true
-    note right of cas : el producto queda en el listado\nde stock bajo (RN-16)
-  end
-  cas --> adm : «ajuste registrado + stock vigente recalculado»
+  note right of cas : si stockBajo = true, el producto aparece\nen el listado de stock bajo (RN-16)
+  cas --> adm : «ajuste registrado + stockVigente»
 else cantidadReal negativa o falta el motivo
   cas --> adm : «"dato inválido o incompleto"»
 end

@@ -813,10 +813,21 @@ participant "<u>lt:Lote</u>" as lt
 collections "<u>lotes:Lote</u>" as ml <<multiobjeto>>
 
 u -> cri ++ : confirmarIngreso()
-note right of cri : usa p, lt, nroLote, cantidad y fechaVencimiento\nobtenidos en registrarIngreso
+note right of cri : usa p, nroLote, cantidad y fechaVencimiento\nobtenidos en registrarIngreso
 create participant "<u>ing:IngresoMercaderia</u>" as ing
 cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
 cri -> ing ++ : aplicar()
+ing -> p ++ : buscarLote(nroLote : String)
+group bucle [para cada lote en lotes]
+  p -> li ++ : getNroLote()
+  li --> p -- : «nro : String»
+end
+note right of p
+  si nro = nroLote
+  lt = lotes[i]
+  cortar iteración
+end note
+p --> ing -- : «lt : Lote»
 alt lt = null (lote nuevo)
   create participant "<u>nl:Lote</u>" as nl
   ing -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
@@ -944,6 +955,7 @@ skinparam NoteBorderColor black
 
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cas:ControladorAjustarStock</u>" as cas
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
@@ -968,12 +980,21 @@ alt cantidadReal ≥ 0 y motivo cargado
   aj -> lt ++ : corregirCantidad(cantidadReal : int)
   lt --> aj -- : «cantidadLote : int»
   aj --> cas -- : «true»
+  cas -> cat ++ : calcularStockVigente(p : Producto)
+  cat -> p ++ : getLotes()
+  p --> cat -- : «lotes : Lote[]»
+  group bucle [para cada lote en lotes]
+    cat -> li ++ : estaVencido(fecha : Date)
+    li --> cat -- : «vencido : boolean»
+    cat -> li ++ : getCantidadLote()
+    li --> cat -- : «cantidadLote : int»
+  end
+  note right of cat : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+  cat --> cas -- : «stockVigente : int»
   cas -> p ++ : tieneStockBajo()
   p --> cas -- : «stockBajo : boolean»
-  opt stockBajo = true
-    note right of cas : el producto queda en el listado\nde stock bajo (RN-16)
-  end
-  cas --> adm : «ajuste registrado + stock vigente recalculado»
+  note right of cas : si stockBajo = true, el producto aparece\nen el listado de stock bajo (RN-16)
+  cas --> adm : «ajuste registrado + stockVigente»
 else cantidadReal negativa o falta el motivo
   cas --> adm : «"dato inválido o incompleto"»
 end
@@ -1250,7 +1271,7 @@ end
 note right of cat : si activo: agregar productos[i] al resultado
 cat --> ccv -- : «productos : Producto[]»
 group bucle [para cada producto en productos]
-  ccv -> cat ++ : calcularStockVigente(p : Producto)
+  ccv -> cat ++ : calcularStockVigente(productos[i] : Producto)
   cat -> pi ++ : getLotes()
   pi --> cat -- : «lotes : Lote[]»
   group bucle [para cada lote en lotes]
@@ -1261,7 +1282,7 @@ group bucle [para cada producto en productos]
   end
   note right of cat : si vencido = false:\nstockVigente = stockVigente + cantidadLote
   cat --> ccv -- : «stockVigente : int»
-  ccv -> cat ++ : calcularStockVencido(p : Producto)
+  ccv -> cat ++ : calcularStockVencido(productos[i] : Producto)
   group bucle [para cada stockVencido en vencidos]
     cat -> vi ++ : getLote()
     vi --> cat -- : «lv : Lote»
@@ -1270,21 +1291,15 @@ group bucle [para cada producto en productos]
     cat -> vi ++ : getCantidad()
     vi --> cat -- : «cantidad : int»
   end
-  note right of cat : si producto = p:\nstockVencido = stockVencido + cantidad
+  note right of cat : si producto = productos[i]:\nstockVencido = stockVencido + cantidad
   cat --> ccv -- : «stockVencido : int»
 end
-note right of ccv : totalFisico = stockVigente + stockVencido (RN-19)
-alt proximos no está vacía
-  ccv --> u : «lotes próximos a vencer»
-else proximos vacía
-  ccv --> u : «"no hay lotes por vencer"»
-end
-alt vencidos no está vacía
-  ccv --> u : «lotes vencidos pendientes de retiro»
-else vencidos vacía
-  ccv --> u : «"no hay mercadería vencida en el depósito"»
-end
-ccv --> u -- : «por producto: stockVigente, stockVencido y totalFisico»
+note right of ccv
+  totalFisico = stockVigente + stockVencido (RN-19)
+  si proximos está vacía: "no hay lotes por vencer"
+  si vencidos está vacía: "no hay mercadería vencida en el depósito"
+end note
+ccv --> u -- : «proximos : Lote[], vencidos : StockVencido[] y, por producto, stockVigente, stockVencido y totalFisico»
 
 @enduml
 ```
