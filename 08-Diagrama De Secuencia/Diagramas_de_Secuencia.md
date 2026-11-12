@@ -2,6 +2,31 @@
 
 Diagramas hechos en **PlantUML** siguiendo los ejemplos de `crearNuevaVenta` e `introducirArticulo` de la teoría. Hay **un diagrama por operación del sistema**: cada uno se muestra como imagen y debajo tiene su código (desplegable *Código PlantUML*).
 
+## Convenciones (las de la teoría)
+
+- **Un DSD por operación del sistema**: empieza con un único mensaje del actor al controlador y termina con su retorno. Si una operación usa algo que obtuvo la anterior, el controlador lo conserva (como `ventaActual`).
+- **Controlador** por caso de uso (`cpv:ControladorProcesarVenta` en la teoría): es el único que habla con el actor y delega hacia la derecha.
+- Objetos como `nombre:Clase` **subrayados**, con líneas de vida punteadas. El actor es el rol (`adm:Administrador`).
+- Flecha llena: mensaje con sus parámetros tipados. Flecha punteada: retorno `«valor : Tipo»` (sin texto si no devuelve nada).
+- **Ninguna flecha sale y vuelve a la misma línea de vida**: los cálculos y comparaciones van en una nota, como `subtotal = subtotal + (cantidad * precio)`.
+- **Búsquedas y listados**: el dueño de la colección (el Catálogo, como `cp:CatalogoDeProductos` en la teoría) la recorre en un marco `bucle [para cada ...]`, le pide a cada `coleccion[i]` el dato con su getter, y una nota dice qué hace: `si ... cortar iteración` en una búsqueda, `agregar al resultado` en un listado. El objeto encontrado es otra línea de vida, como `especif[i]` y `ep`.
+- `crear(...)` / `registrar(...)`: flecha punteada de creación; la caja del objeto nuevo aparece a esa altura.
+- Marcos `alt`, `opt` y `bucle` con su condición de guarda, según la tabla de operadores de la teoría.
+
+Los **procesos automáticos** (vencimiento de lote, alertas) no se diagraman porque no los inicia un actor. Los **controladores** son clases de diseño y no figuran en el [Diagrama de Clases](../07-Diagrama%20De%20Clases/Diagrama_de_Clases.puml), que modela solo el dominio; todos los métodos que los DSD invocan sobre objetos del dominio existen en el DCC.
+
+## Índice
+
+- **CU-01 - Iniciar sesión**: `iniciarSesion`
+- **CU-02 - Gestionar usuario**: `altaUsuario`, `modificarUsuario`, `darBajaUsuario`
+- **CU-03 - Gestionar categoría**: `altaCategoria`, `modificarCategoria`
+- **CU-04 - Gestionar producto**: `altaProducto`, `modificarProducto`, `darBajaProducto`
+- **CU-05 - Registrar ingreso de mercadería**: `registrarIngreso`, `confirmarIngreso`
+- **CU-06 - Ajustar stock**: `seleccionarProducto`, `ajustarStock`
+- **CU-07 - Registrar retiro de mercadería vencida**: `leerEtiqueta`, `registrarRetiro`
+- **CU-08 - Consultar productos con stock bajo**: `consultarStockBajo`
+- **CU-09 - Consultar vencimientos y stock vencido**: `consultarVencimientos`
+
 ---
 
 ## CU-01 - Iniciar sesión
@@ -40,10 +65,6 @@ participant "<u>ci:ControladorIniciarSesion</u>" as ci
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>us:Usuario</u>" as us
-participant "<u>cat:«Singleton»Catalogo</u>" as cat
-participant "<u>productos[i]:Producto</u>" as pi
-participant "<u>lotes[j]:Lote</u>" as li
-participant "<u>vencidos[k]:StockVencido</u>" as vi
 
 u -> ci ++ : iniciarSesion(nombreUsuario : String, contraseña : String)
 ci -> reg ++ : buscarUsuario(nombreUsuario : String)
@@ -65,33 +86,7 @@ alt us != null y contraseña correcta
     ci -> us ++ : esAdministrador()
     us --> ci -- : «esAdmin : boolean»
     note right of ci : habilita las funciones del rol según esAdmin
-    ci -> cat ++ : listarStockBajo()
-    group bucle [para cada producto en productos]
-      cat -> pi ++ : estaActivo()
-      pi --> cat -- : «activo : boolean»
-      cat -> pi ++ : tieneStockBajo()
-      pi --> cat -- : «stockBajo : boolean»
-    end
-    note right of cat : si activo y stockBajo:\nagregar productos[i] al resultado
-    cat --> ci -- : «stockBajo : Producto[]»
-    ci -> cat ++ : listarProximosAVencer(dias : int)
-    group bucle [para cada producto en productos]
-      cat -> pi ++ : getLotes()
-      pi --> cat -- : «lotes : Lote[]»
-      group bucle [para cada lote en lotes]
-        cat -> li ++ : estaProximoAVencer(dias : int)
-        li --> cat -- : «proximo : boolean»
-      end
-    end
-    note right of cat : dias = 15 (RN-17)\nsi proximo: agregar lotes[j] al resultado
-    cat --> ci -- : «proximos : Lote[]»
-    ci -> cat ++ : listarVencidos()
-    group bucle [para cada stockVencido en vencidos]
-      cat -> vi ++ : estaRetirado()
-      vi --> cat -- : «retirado : boolean»
-    end
-    note right of cat : si retirado = false:\nagregar vencidos[k] al resultado
-    cat --> ci -- : «vencidos : StockVencido[]»
+    note right of ci : muestra el panel de alertas de stock bajo\ny vencimientos (ver CU-08 y CU-09)
     ci --> u : «funciones del rol + panel de alertas»
   else activo = false (usuario dado de baja)
     ci --> u : «"usuario o contraseña incorrectos"»
