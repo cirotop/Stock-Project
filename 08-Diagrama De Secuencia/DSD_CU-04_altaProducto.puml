@@ -23,45 +23,52 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>categorias[i]:Categoria</u>" as ki
 collections "<u>productos:Producto</u>" as mp <<multiobjeto>>
 
 u -> cgp ++ : altaProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
-cgp -> cat ++ : buscarProducto(codigoProducto : String)
-group bucle [para cada producto en productos]
-  cat -> pi ++ : getCodigoProducto()
-  pi --> cat -- : «codigo : String»
-end
-note right of cat
-  si codigo = codigoProducto
-  existente = productos[i]
-  cortar iteración
-end note
-cat --> cgp -- : «existente : Producto»
-alt el código de producto no existe
-  cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
-  group bucle [para cada categoria en categorias]
-    cat -> ki ++ : getNombreCategoria()
-    ki --> cat -- : «nombre : String»
+cgp -> resp ++ : esAdministrador()
+resp --> cgp -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgp -> cat ++ : buscarProducto(codigoProducto : String)
+  group bucle [para cada producto en productos]
+    cat -> pi ++ : getCodigoProducto()
+    pi --> cat -- : «codigo : String»
   end
   note right of cat
-    si nombre = nombreCategoria
-    categoria = categorias[i]
+    si codigo = codigoProducto
+    existente = productos[i]
     cortar iteración
   end note
-  cat --> cgp -- : «categoria : Categoria»
-  create participant "<u>p:Producto</u>" as p
-  cgp -->> p : crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, responsable : Usuario)
-  note right of p : queda activo y sin lotes\n(stock vigente = 0, RN-08)
-  cgp -> cat ++ : agregarProducto(p : Producto)
-  cat -> mp ++ : add(p : Producto)
-  mp --> cat --
-  cat --> cgp --
-  cgp --> u : «"producto creado" : String»
-else el código ya está registrado (RN-09)
-  cgp --> u : «"código ya registrado" : String»
+  cat --> cgp -- : «existente : Producto»
+  alt el código de producto no existe
+    cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
+    group bucle [para cada categoria en categorias]
+      cat -> ki ++ : getNombreCategoria()
+      ki --> cat -- : «nombre : String»
+    end
+    note right of cat
+      si nombre = nombreCategoria
+      categoria = categorias[i]
+      cortar iteración
+    end note
+    cat --> cgp -- : «categoria : Categoria»
+    create participant "<u>p:Producto</u>" as p
+    cgp -->> p : crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, responsable : Usuario)
+    note right of p : queda activo y sin lotes\n(stock vigente = 0, RN-08)
+    cgp -> cat ++ : agregarProducto(p : Producto)
+    cat -> mp ++ : add(p : Producto)
+    mp --> cat --
+    cat --> cgp --
+    cgp --> u : «"producto creado" : String»
+  else el código ya está registrado (RN-09)
+    cgp --> u : «"código ya registrado" : String»
+  end
+else el usuario no es administrador
+  cgp --> u : «"no tiene permiso para esta operación" : String»
 end
 deactivate cgp
 

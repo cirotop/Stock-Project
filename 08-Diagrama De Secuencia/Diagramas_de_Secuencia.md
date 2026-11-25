@@ -118,45 +118,52 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
 collections "<u>usuarios:Usuario</u>" as mu <<multiobjeto>>
 
 u -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
-cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
-group bucle [para cada usuario en usuarios]
-  reg -> ui ++ : getNombreUsuario()
-  ui --> reg -- : «nombre : String»
-end
-note right of reg
-  si nombre = nombreUsuario
-  existente = usuarios[i]
-  cortar iteración
-end note
-reg --> cgu -- : «existente : Usuario»
-alt el nombre de usuario no existe
-  cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
-  group bucle [para cada rol en roles]
-    reg -> ri ++ : getNombreRol()
-    ri --> reg -- : «nombre : TipoRol»
+cgu -> resp ++ : esAdministrador()
+resp --> cgu -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
+  group bucle [para cada usuario en usuarios]
+    reg -> ui ++ : getNombreUsuario()
+    ui --> reg -- : «nombre : String»
   end
   note right of reg
-    si nombre = nombreRol
-    rol = roles[i]
+    si nombre = nombreUsuario
+    existente = usuarios[i]
     cortar iteración
   end note
-  reg --> cgu -- : «rol : Rol»
-  create participant "<u>nu:Usuario</u>" as nu
-  cgu -->> nu : crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, responsable : Usuario)
-  note right of nu : guarda la contraseña cifrada (hash)
-  cgu -> reg ++ : agregarUsuario(nu : Usuario)
-  reg -> mu ++ : add(nu : Usuario)
-  mu --> reg --
-  reg --> cgu --
-  cgu --> u : «"usuario creado" : String»
-else el nombre de usuario ya existe
-  cgu --> u : «"nombre de usuario no disponible" : String»
+  reg --> cgu -- : «existente : Usuario»
+  alt el nombre de usuario no existe
+    cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
+    group bucle [para cada rol en roles]
+      reg -> ri ++ : getNombreRol()
+      ri --> reg -- : «nombre : TipoRol»
+    end
+    note right of reg
+      si nombre = nombreRol
+      rol = roles[i]
+      cortar iteración
+    end note
+    reg --> cgu -- : «rol : Rol»
+    create participant "<u>nu:Usuario</u>" as nu
+    cgu -->> nu : crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, responsable : Usuario)
+    note right of nu : guarda la contraseña cifrada (hash)
+    cgu -> reg ++ : agregarUsuario(nu : Usuario)
+    reg -> mu ++ : add(nu : Usuario)
+    mu --> reg --
+    reg --> cgu --
+    cgu --> u : «"usuario creado" : String»
+  else el nombre de usuario ya existe
+    cgu --> u : «"nombre de usuario no disponible" : String»
+  end
+else el usuario no es administrador
+  cgu --> u : «"no tiene permiso para esta operación" : String»
 end
 deactivate cgu
 
@@ -198,37 +205,45 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
 participant "<u>us:Usuario</u>" as us
 
 u -> cgu ++ : modificarUsuario(nombreUsuario : String, nombreCompleto : String, nombreRol : TipoRol)
-cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
-group bucle [para cada usuario en usuarios]
-  reg -> ui ++ : getNombreUsuario()
-  ui --> reg -- : «nombre : String»
+cgu -> resp ++ : esAdministrador()
+resp --> cgu -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
+  group bucle [para cada usuario en usuarios]
+    reg -> ui ++ : getNombreUsuario()
+    ui --> reg -- : «nombre : String»
+  end
+  note right of reg
+    si nombre = nombreUsuario
+    us = usuarios[i]
+    cortar iteración
+  end note
+  reg --> cgu -- : «us : Usuario»
+  cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
+  group bucle [para cada rol en roles]
+    reg -> ri ++ : getNombreRol()
+    ri --> reg -- : «nombre : TipoRol»
+  end
+  note right of reg
+    si nombre = nombreRol
+    rol = roles[i]
+    cortar iteración
+  end note
+  reg --> cgu -- : «rol : Rol»
+  cgu -> us ++ : modificar(nombreCompleto : String, rol : Rol)
+  us --> cgu --
+  cgu --> u : «"usuario modificado" : String»
+else el usuario no es administrador
+  cgu --> u : «"no tiene permiso para esta operación" : String»
 end
-note right of reg
-  si nombre = nombreUsuario
-  us = usuarios[i]
-  cortar iteración
-end note
-reg --> cgu -- : «us : Usuario»
-cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
-group bucle [para cada rol en roles]
-  reg -> ri ++ : getNombreRol()
-  ri --> reg -- : «nombre : TipoRol»
-end
-note right of reg
-  si nombre = nombreRol
-  rol = roles[i]
-  cortar iteración
-end note
-reg --> cgu -- : «rol : Rol»
-cgu -> us ++ : modificar(nombreCompleto : String, rol : Rol)
-us --> cgu --
-cgu --> u -- : «"usuario modificado" : String»
+deactivate cgu
 
 @enduml
 ```
@@ -268,26 +283,34 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>us:Usuario</u>" as us
 
 u -> cgu ++ : darBajaUsuario(nombreUsuario : String)
-cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
-group bucle [para cada usuario en usuarios]
-  reg -> ui ++ : getNombreUsuario()
-  ui --> reg -- : «nombre : String»
+cgu -> resp ++ : esAdministrador()
+resp --> cgu -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
+  group bucle [para cada usuario en usuarios]
+    reg -> ui ++ : getNombreUsuario()
+    ui --> reg -- : «nombre : String»
+  end
+  note right of reg
+    si nombre = nombreUsuario
+    us = usuarios[i]
+    cortar iteración
+  end note
+  reg --> cgu -- : «us : Usuario»
+  cgu -> us ++ : darBaja()
+  note right of us : baja lógica: el usuario queda inactivo
+  us --> cgu --
+  cgu --> u : «"usuario dado de baja" : String»
+else el usuario no es administrador
+  cgu --> u : «"no tiene permiso para esta operación" : String»
 end
-note right of reg
-  si nombre = nombreUsuario
-  us = usuarios[i]
-  cortar iteración
-end note
-reg --> cgu -- : «us : Usuario»
-cgu -> us ++ : darBaja()
-note right of us : baja lógica: el usuario queda inactivo
-us --> cgu --
-cgu --> u -- : «"usuario dado de baja" : String»
+deactivate cgu
 
 @enduml
 ```
@@ -331,32 +354,39 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>categorias[i]:Categoria</u>" as ki
 collections "<u>categorias:Categoria</u>" as mc <<multiobjeto>>
 
 u -> cgc ++ : altaCategoria(nombreCategoria : String, descripcionCategoria : String)
-cgc -> cat ++ : buscarCategoria(nombreCategoria : String)
-group bucle [para cada categoria en categorias]
-  cat -> ki ++ : getNombreCategoria()
-  ki --> cat -- : «nombre : String»
-end
-note right of cat
-  si nombre = nombreCategoria
-  existente = categorias[i]
-  cortar iteración
-end note
-cat --> cgc -- : «existente : Categoria»
-alt la categoría no existe
-  create participant "<u>c:Categoria</u>" as c
-  cgc -->> c : crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario)
-  cgc -> cat ++ : agregarCategoria(c : Categoria)
-  cat -> mc ++ : add(c : Categoria)
-  mc --> cat --
-  cat --> cgc --
-  cgc --> u : «"categoría creada" : String»
-else la categoría ya existe
-  cgc --> u : «"categoría ya registrada" : String»
+cgc -> resp ++ : esAdministrador()
+resp --> cgc -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgc -> cat ++ : buscarCategoria(nombreCategoria : String)
+  group bucle [para cada categoria en categorias]
+    cat -> ki ++ : getNombreCategoria()
+    ki --> cat -- : «nombre : String»
+  end
+  note right of cat
+    si nombre = nombreCategoria
+    existente = categorias[i]
+    cortar iteración
+  end note
+  cat --> cgc -- : «existente : Categoria»
+  alt la categoría no existe
+    create participant "<u>c:Categoria</u>" as c
+    cgc -->> c : crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario)
+    cgc -> cat ++ : agregarCategoria(c : Categoria)
+    cat -> mc ++ : add(c : Categoria)
+    mc --> cat --
+    cat --> cgc --
+    cgc --> u : «"categoría creada" : String»
+  else la categoría ya existe
+    cgc --> u : «"categoría ya registrada" : String»
+  end
+else el usuario no es administrador
+  cgc --> u : «"no tiene permiso para esta operación" : String»
 end
 deactivate cgc
 
@@ -398,25 +428,33 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>categorias[i]:Categoria</u>" as ki
 participant "<u>c:Categoria</u>" as c
 
 u -> cgc ++ : modificarCategoria(nombreActual : String, nombreCategoria : String, descripcionCategoria : String)
-cgc -> cat ++ : buscarCategoria(nombreActual : String)
-group bucle [para cada categoria en categorias]
-  cat -> ki ++ : getNombreCategoria()
-  ki --> cat -- : «nombre : String»
+cgc -> resp ++ : esAdministrador()
+resp --> cgc -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgc -> cat ++ : buscarCategoria(nombreActual : String)
+  group bucle [para cada categoria en categorias]
+    cat -> ki ++ : getNombreCategoria()
+    ki --> cat -- : «nombre : String»
+  end
+  note right of cat
+    si nombre = nombreActual
+    c = categorias[i]
+    cortar iteración
+  end note
+  cat --> cgc -- : «c : Categoria»
+  cgc -> c ++ : modificar(nombreCategoria : String, descripcionCategoria : String)
+  c --> cgc --
+  cgc --> u : «"categoría modificada" : String»
+else el usuario no es administrador
+  cgc --> u : «"no tiene permiso para esta operación" : String»
 end
-note right of cat
-  si nombre = nombreActual
-  c = categorias[i]
-  cortar iteración
-end note
-cat --> cgc -- : «c : Categoria»
-cgc -> c ++ : modificar(nombreCategoria : String, descripcionCategoria : String)
-c --> cgc --
-cgc --> u -- : «"categoría modificada" : String»
+deactivate cgc
 
 @enduml
 ```
@@ -460,45 +498,52 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>categorias[i]:Categoria</u>" as ki
 collections "<u>productos:Producto</u>" as mp <<multiobjeto>>
 
 u -> cgp ++ : altaProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
-cgp -> cat ++ : buscarProducto(codigoProducto : String)
-group bucle [para cada producto en productos]
-  cat -> pi ++ : getCodigoProducto()
-  pi --> cat -- : «codigo : String»
-end
-note right of cat
-  si codigo = codigoProducto
-  existente = productos[i]
-  cortar iteración
-end note
-cat --> cgp -- : «existente : Producto»
-alt el código de producto no existe
-  cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
-  group bucle [para cada categoria en categorias]
-    cat -> ki ++ : getNombreCategoria()
-    ki --> cat -- : «nombre : String»
+cgp -> resp ++ : esAdministrador()
+resp --> cgp -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgp -> cat ++ : buscarProducto(codigoProducto : String)
+  group bucle [para cada producto en productos]
+    cat -> pi ++ : getCodigoProducto()
+    pi --> cat -- : «codigo : String»
   end
   note right of cat
-    si nombre = nombreCategoria
-    categoria = categorias[i]
+    si codigo = codigoProducto
+    existente = productos[i]
     cortar iteración
   end note
-  cat --> cgp -- : «categoria : Categoria»
-  create participant "<u>p:Producto</u>" as p
-  cgp -->> p : crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, responsable : Usuario)
-  note right of p : queda activo y sin lotes\n(stock vigente = 0, RN-08)
-  cgp -> cat ++ : agregarProducto(p : Producto)
-  cat -> mp ++ : add(p : Producto)
-  mp --> cat --
-  cat --> cgp --
-  cgp --> u : «"producto creado" : String»
-else el código ya está registrado (RN-09)
-  cgp --> u : «"código ya registrado" : String»
+  cat --> cgp -- : «existente : Producto»
+  alt el código de producto no existe
+    cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
+    group bucle [para cada categoria en categorias]
+      cat -> ki ++ : getNombreCategoria()
+      ki --> cat -- : «nombre : String»
+    end
+    note right of cat
+      si nombre = nombreCategoria
+      categoria = categorias[i]
+      cortar iteración
+    end note
+    cat --> cgp -- : «categoria : Categoria»
+    create participant "<u>p:Producto</u>" as p
+    cgp -->> p : crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, responsable : Usuario)
+    note right of p : queda activo y sin lotes\n(stock vigente = 0, RN-08)
+    cgp -> cat ++ : agregarProducto(p : Producto)
+    cat -> mp ++ : add(p : Producto)
+    mp --> cat --
+    cat --> cgp --
+    cgp --> u : «"producto creado" : String»
+  else el código ya está registrado (RN-09)
+    cgp --> u : «"código ya registrado" : String»
+  end
+else el usuario no es administrador
+  cgp --> u : «"no tiene permiso para esta operación" : String»
 end
 deactivate cgp
 
@@ -540,37 +585,45 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>categorias[i]:Categoria</u>" as ki
 participant "<u>p:Producto</u>" as p
 
 u -> cgp ++ : modificarProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
-cgp -> cat ++ : buscarProducto(codigoProducto : String)
-group bucle [para cada producto en productos]
-  cat -> pi ++ : getCodigoProducto()
-  pi --> cat -- : «codigo : String»
+cgp -> resp ++ : esAdministrador()
+resp --> cgp -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgp -> cat ++ : buscarProducto(codigoProducto : String)
+  group bucle [para cada producto en productos]
+    cat -> pi ++ : getCodigoProducto()
+    pi --> cat -- : «codigo : String»
+  end
+  note right of cat
+    si codigo = codigoProducto
+    p = productos[i]
+    cortar iteración
+  end note
+  cat --> cgp -- : «p : Producto»
+  cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
+  group bucle [para cada categoria en categorias]
+    cat -> ki ++ : getNombreCategoria()
+    ki --> cat -- : «nombre : String»
+  end
+  note right of cat
+    si nombre = nombreCategoria
+    categoria = categorias[i]
+    cortar iteración
+  end note
+  cat --> cgp -- : «categoria : Categoria»
+  cgp -> p ++ : modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int)
+  p --> cgp --
+  cgp --> u : «"producto modificado" : String»
+else el usuario no es administrador
+  cgp --> u : «"no tiene permiso para esta operación" : String»
 end
-note right of cat
-  si codigo = codigoProducto
-  p = productos[i]
-  cortar iteración
-end note
-cat --> cgp -- : «p : Producto»
-cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
-group bucle [para cada categoria en categorias]
-  cat -> ki ++ : getNombreCategoria()
-  ki --> cat -- : «nombre : String»
-end
-note right of cat
-  si nombre = nombreCategoria
-  categoria = categorias[i]
-  cortar iteración
-end note
-cat --> cgp -- : «categoria : Categoria»
-cgp -> p ++ : modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int)
-p --> cgp --
-cgp --> u -- : «"producto modificado" : String»
+deactivate cgp
 
 @enduml
 ```
@@ -610,26 +663,34 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 
 u -> cgp ++ : darBajaProducto(codigoProducto : String)
-cgp -> cat ++ : buscarProducto(codigoProducto : String)
-group bucle [para cada producto en productos]
-  cat -> pi ++ : getCodigoProducto()
-  pi --> cat -- : «codigo : String»
+cgp -> resp ++ : esAdministrador()
+resp --> cgp -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgp -> cat ++ : buscarProducto(codigoProducto : String)
+  group bucle [para cada producto en productos]
+    cat -> pi ++ : getCodigoProducto()
+    pi --> cat -- : «codigo : String»
+  end
+  note right of cat
+    si codigo = codigoProducto
+    p = productos[i]
+    cortar iteración
+  end note
+  cat --> cgp -- : «p : Producto»
+  cgp -> p ++ : darBaja()
+  note right of p : baja lógica: el producto queda inactivo (RN-10)
+  p --> cgp --
+  cgp --> u : «"producto dado de baja" : String»
+else el usuario no es administrador
+  cgp --> u : «"no tiene permiso para esta operación" : String»
 end
-note right of cat
-  si codigo = codigoProducto
-  p = productos[i]
-  cortar iteración
-end note
-cat --> cgp -- : «p : Producto»
-cgp -> p ++ : darBaja()
-note right of p : baja lógica: el producto queda inactivo (RN-10)
-p --> cgp --
-cgp --> u -- : «"producto dado de baja" : String»
+deactivate cgp
 
 @enduml
 ```
@@ -895,33 +956,40 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cas:ControladorAjustarStock</u>" as cas
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
 u -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
-note right of cas : p es el producto elegido en seleccionarProducto
-alt la cantidad real no es negativa y hay motivo
-  cas -> p ++ : buscarLote(nroLote : String)
-  group bucle [para cada lote en lotes]
-    p -> li ++ : getNroLote()
-    li --> p -- : «nro : String»
+cas -> resp ++ : esAdministrador()
+resp --> cas -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  note right of cas : p es el producto elegido en seleccionarProducto
+  alt la cantidad real no es negativa y hay motivo
+    cas -> p ++ : buscarLote(nroLote : String)
+    group bucle [para cada lote en lotes]
+      p -> li ++ : getNroLote()
+      li --> p -- : «nro : String»
+    end
+    note right of p
+      si nro = nroLote
+      lt = lotes[i]
+      cortar iteración
+    end note
+    p --> cas -- : «lt : Lote»
+    create participant "<u>aj:AjusteStock</u>" as aj
+    cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
+    cas -> aj ++ : aplicar()
+    aj -> lt ++ : corregirCantidad(cantidadReal : int)
+    lt --> aj -- : «cantidadLote : int»
+    aj --> cas -- : «aplicado : boolean»
+    cas --> u : «"ajuste registrado" : String»
+  else la cantidad real es negativa o falta el motivo
+    cas --> u : «"dato inválido o incompleto" : String»
   end
-  note right of p
-    si nro = nroLote
-    lt = lotes[i]
-    cortar iteración
-  end note
-  p --> cas -- : «lt : Lote»
-  create participant "<u>aj:AjusteStock</u>" as aj
-  cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
-  cas -> aj ++ : aplicar()
-  aj -> lt ++ : corregirCantidad(cantidadReal : int)
-  lt --> aj -- : «cantidadLote : int»
-  aj --> cas -- : «aplicado : boolean»
-  cas --> u : «"ajuste registrado" : String»
-else la cantidad real es negativa o falta el motivo
-  cas --> u : «"dato inválido o incompleto" : String»
+else el usuario no es administrador
+  cas --> u : «"no tiene permiso para esta operación" : String»
 end
 deactivate cas
 
@@ -998,7 +1066,7 @@ alt la etiqueta corresponde a mercadería vencida
   crv -> sv ++ : getCantidad()
   sv --> crv -- : «cantidad : int»
   crv --> u : «"producto: " + codigoProducto + ", cantidad: " + cantidad : String»
-else la etiqueta no existe
+else la etiqueta no existe o ya fue retirada
   crv --> u : «"etiqueta no encontrada" : String»
 end
 deactivate crv

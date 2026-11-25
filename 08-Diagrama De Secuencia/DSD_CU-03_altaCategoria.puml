@@ -23,32 +23,39 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>categorias[i]:Categoria</u>" as ki
 collections "<u>categorias:Categoria</u>" as mc <<multiobjeto>>
 
 u -> cgc ++ : altaCategoria(nombreCategoria : String, descripcionCategoria : String)
-cgc -> cat ++ : buscarCategoria(nombreCategoria : String)
-group bucle [para cada categoria en categorias]
-  cat -> ki ++ : getNombreCategoria()
-  ki --> cat -- : «nombre : String»
-end
-note right of cat
-  si nombre = nombreCategoria
-  existente = categorias[i]
-  cortar iteración
-end note
-cat --> cgc -- : «existente : Categoria»
-alt la categoría no existe
-  create participant "<u>c:Categoria</u>" as c
-  cgc -->> c : crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario)
-  cgc -> cat ++ : agregarCategoria(c : Categoria)
-  cat -> mc ++ : add(c : Categoria)
-  mc --> cat --
-  cat --> cgc --
-  cgc --> u : «"categoría creada" : String»
-else la categoría ya existe
-  cgc --> u : «"categoría ya registrada" : String»
+cgc -> resp ++ : esAdministrador()
+resp --> cgc -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgc -> cat ++ : buscarCategoria(nombreCategoria : String)
+  group bucle [para cada categoria en categorias]
+    cat -> ki ++ : getNombreCategoria()
+    ki --> cat -- : «nombre : String»
+  end
+  note right of cat
+    si nombre = nombreCategoria
+    existente = categorias[i]
+    cortar iteración
+  end note
+  cat --> cgc -- : «existente : Categoria»
+  alt la categoría no existe
+    create participant "<u>c:Categoria</u>" as c
+    cgc -->> c : crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario)
+    cgc -> cat ++ : agregarCategoria(c : Categoria)
+    cat -> mc ++ : add(c : Categoria)
+    mc --> cat --
+    cat --> cgc --
+    cgc --> u : «"categoría creada" : String»
+  else la categoría ya existe
+    cgc --> u : «"categoría ya registrada" : String»
+  end
+else el usuario no es administrador
+  cgc --> u : «"no tiene permiso para esta operación" : String»
 end
 deactivate cgc
 

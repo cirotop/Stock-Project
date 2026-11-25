@@ -23,24 +23,32 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>categorias[i]:Categoria</u>" as ki
 participant "<u>c:Categoria</u>" as c
 
 u -> cgc ++ : modificarCategoria(nombreActual : String, nombreCategoria : String, descripcionCategoria : String)
-cgc -> cat ++ : buscarCategoria(nombreActual : String)
-group bucle [para cada categoria en categorias]
-  cat -> ki ++ : getNombreCategoria()
-  ki --> cat -- : «nombre : String»
+cgc -> resp ++ : esAdministrador()
+resp --> cgc -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgc -> cat ++ : buscarCategoria(nombreActual : String)
+  group bucle [para cada categoria en categorias]
+    cat -> ki ++ : getNombreCategoria()
+    ki --> cat -- : «nombre : String»
+  end
+  note right of cat
+    si nombre = nombreActual
+    c = categorias[i]
+    cortar iteración
+  end note
+  cat --> cgc -- : «c : Categoria»
+  cgc -> c ++ : modificar(nombreCategoria : String, descripcionCategoria : String)
+  c --> cgc --
+  cgc --> u : «"categoría modificada" : String»
+else el usuario no es administrador
+  cgc --> u : «"no tiene permiso para esta operación" : String»
 end
-note right of cat
-  si nombre = nombreActual
-  c = categorias[i]
-  cortar iteración
-end note
-cat --> cgc -- : «c : Categoria»
-cgc -> c ++ : modificar(nombreCategoria : String, descripcionCategoria : String)
-c --> cgc --
-cgc --> u -- : «"categoría modificada" : String»
+deactivate cgc
 
 @enduml

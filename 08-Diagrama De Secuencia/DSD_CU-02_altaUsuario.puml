@@ -23,45 +23,52 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
 collections "<u>usuarios:Usuario</u>" as mu <<multiobjeto>>
 
 u -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
-cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
-group bucle [para cada usuario en usuarios]
-  reg -> ui ++ : getNombreUsuario()
-  ui --> reg -- : «nombre : String»
-end
-note right of reg
-  si nombre = nombreUsuario
-  existente = usuarios[i]
-  cortar iteración
-end note
-reg --> cgu -- : «existente : Usuario»
-alt el nombre de usuario no existe
-  cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
-  group bucle [para cada rol en roles]
-    reg -> ri ++ : getNombreRol()
-    ri --> reg -- : «nombre : TipoRol»
+cgu -> resp ++ : esAdministrador()
+resp --> cgu -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
+  group bucle [para cada usuario en usuarios]
+    reg -> ui ++ : getNombreUsuario()
+    ui --> reg -- : «nombre : String»
   end
   note right of reg
-    si nombre = nombreRol
-    rol = roles[i]
+    si nombre = nombreUsuario
+    existente = usuarios[i]
     cortar iteración
   end note
-  reg --> cgu -- : «rol : Rol»
-  create participant "<u>nu:Usuario</u>" as nu
-  cgu -->> nu : crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, responsable : Usuario)
-  note right of nu : guarda la contraseña cifrada (hash)
-  cgu -> reg ++ : agregarUsuario(nu : Usuario)
-  reg -> mu ++ : add(nu : Usuario)
-  mu --> reg --
-  reg --> cgu --
-  cgu --> u : «"usuario creado" : String»
-else el nombre de usuario ya existe
-  cgu --> u : «"nombre de usuario no disponible" : String»
+  reg --> cgu -- : «existente : Usuario»
+  alt el nombre de usuario no existe
+    cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
+    group bucle [para cada rol en roles]
+      reg -> ri ++ : getNombreRol()
+      ri --> reg -- : «nombre : TipoRol»
+    end
+    note right of reg
+      si nombre = nombreRol
+      rol = roles[i]
+      cortar iteración
+    end note
+    reg --> cgu -- : «rol : Rol»
+    create participant "<u>nu:Usuario</u>" as nu
+    cgu -->> nu : crear(nombreUsuario : String, contraseña : String, nombreCompleto : String, rol : Rol, responsable : Usuario)
+    note right of nu : guarda la contraseña cifrada (hash)
+    cgu -> reg ++ : agregarUsuario(nu : Usuario)
+    reg -> mu ++ : add(nu : Usuario)
+    mu --> reg --
+    reg --> cgu --
+    cgu --> u : «"usuario creado" : String»
+  else el nombre de usuario ya existe
+    cgu --> u : «"nombre de usuario no disponible" : String»
+  end
+else el usuario no es administrador
+  cgu --> u : «"no tiene permiso para esta operación" : String»
 end
 deactivate cgu
 

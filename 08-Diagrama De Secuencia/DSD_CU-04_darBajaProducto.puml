@@ -23,25 +23,33 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 
 u -> cgp ++ : darBajaProducto(codigoProducto : String)
-cgp -> cat ++ : buscarProducto(codigoProducto : String)
-group bucle [para cada producto en productos]
-  cat -> pi ++ : getCodigoProducto()
-  pi --> cat -- : «codigo : String»
+cgp -> resp ++ : esAdministrador()
+resp --> cgp -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgp -> cat ++ : buscarProducto(codigoProducto : String)
+  group bucle [para cada producto en productos]
+    cat -> pi ++ : getCodigoProducto()
+    pi --> cat -- : «codigo : String»
+  end
+  note right of cat
+    si codigo = codigoProducto
+    p = productos[i]
+    cortar iteración
+  end note
+  cat --> cgp -- : «p : Producto»
+  cgp -> p ++ : darBaja()
+  note right of p : baja lógica: el producto queda inactivo (RN-10)
+  p --> cgp --
+  cgp --> u : «"producto dado de baja" : String»
+else el usuario no es administrador
+  cgp --> u : «"no tiene permiso para esta operación" : String»
 end
-note right of cat
-  si codigo = codigoProducto
-  p = productos[i]
-  cortar iteración
-end note
-cat --> cgp -- : «p : Producto»
-cgp -> p ++ : darBaja()
-note right of p : baja lógica: el producto queda inactivo (RN-10)
-p --> cgp --
-cgp --> u -- : «"producto dado de baja" : String»
+deactivate cgp
 
 @enduml

@@ -23,33 +23,40 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cas:ControladorAjustarStock</u>" as cas
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
 u -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
-note right of cas : p es el producto elegido en seleccionarProducto
-alt la cantidad real no es negativa y hay motivo
-  cas -> p ++ : buscarLote(nroLote : String)
-  group bucle [para cada lote en lotes]
-    p -> li ++ : getNroLote()
-    li --> p -- : «nro : String»
+cas -> resp ++ : esAdministrador()
+resp --> cas -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  note right of cas : p es el producto elegido en seleccionarProducto
+  alt la cantidad real no es negativa y hay motivo
+    cas -> p ++ : buscarLote(nroLote : String)
+    group bucle [para cada lote en lotes]
+      p -> li ++ : getNroLote()
+      li --> p -- : «nro : String»
+    end
+    note right of p
+      si nro = nroLote
+      lt = lotes[i]
+      cortar iteración
+    end note
+    p --> cas -- : «lt : Lote»
+    create participant "<u>aj:AjusteStock</u>" as aj
+    cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
+    cas -> aj ++ : aplicar()
+    aj -> lt ++ : corregirCantidad(cantidadReal : int)
+    lt --> aj -- : «cantidadLote : int»
+    aj --> cas -- : «aplicado : boolean»
+    cas --> u : «"ajuste registrado" : String»
+  else la cantidad real es negativa o falta el motivo
+    cas --> u : «"dato inválido o incompleto" : String»
   end
-  note right of p
-    si nro = nroLote
-    lt = lotes[i]
-    cortar iteración
-  end note
-  p --> cas -- : «lt : Lote»
-  create participant "<u>aj:AjusteStock</u>" as aj
-  cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
-  cas -> aj ++ : aplicar()
-  aj -> lt ++ : corregirCantidad(cantidadReal : int)
-  lt --> aj -- : «cantidadLote : int»
-  aj --> cas -- : «aplicado : boolean»
-  cas --> u : «"ajuste registrado" : String»
-else la cantidad real es negativa o falta el motivo
-  cas --> u : «"dato inválido o incompleto" : String»
+else el usuario no es administrador
+  cas --> u : «"no tiene permiso para esta operación" : String»
 end
 deactivate cas
 

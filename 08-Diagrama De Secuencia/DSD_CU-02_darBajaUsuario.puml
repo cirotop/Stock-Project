@@ -23,25 +23,33 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
+participant "<u>responsable:Usuario</u>" as resp
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>us:Usuario</u>" as us
 
 u -> cgu ++ : darBajaUsuario(nombreUsuario : String)
-cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
-group bucle [para cada usuario en usuarios]
-  reg -> ui ++ : getNombreUsuario()
-  ui --> reg -- : «nombre : String»
+cgu -> resp ++ : esAdministrador()
+resp --> cgu -- : «esAdmin : boolean»
+alt el usuario es administrador (RN-11)
+  cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
+  group bucle [para cada usuario en usuarios]
+    reg -> ui ++ : getNombreUsuario()
+    ui --> reg -- : «nombre : String»
+  end
+  note right of reg
+    si nombre = nombreUsuario
+    us = usuarios[i]
+    cortar iteración
+  end note
+  reg --> cgu -- : «us : Usuario»
+  cgu -> us ++ : darBaja()
+  note right of us : baja lógica: el usuario queda inactivo
+  us --> cgu --
+  cgu --> u : «"usuario dado de baja" : String»
+else el usuario no es administrador
+  cgu --> u : «"no tiene permiso para esta operación" : String»
 end
-note right of reg
-  si nombre = nombreUsuario
-  us = usuarios[i]
-  cortar iteración
-end note
-reg --> cgu -- : «us : Usuario»
-cgu -> us ++ : darBaja()
-note right of us : baja lógica: el usuario queda inactivo
-us --> cgu --
-cgu --> u -- : «"usuario dado de baja" : String»
+deactivate cgu
 
 @enduml

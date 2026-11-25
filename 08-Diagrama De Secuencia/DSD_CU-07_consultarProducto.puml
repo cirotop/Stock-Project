@@ -54,7 +54,7 @@ alt la etiqueta corresponde a mercadería vencida
   crv -> sv ++ : getCantidad()
   sv --> crv -- : «cantidad : int»
   crv --> u : «"producto: " + codigoProducto + ", cantidad: " + cantidad : String»
-else la etiqueta no existe
+else la etiqueta no existe o ya fue retirada
   crv --> u : «"etiqueta no encontrada" : String»
 end
 deactivate crv
