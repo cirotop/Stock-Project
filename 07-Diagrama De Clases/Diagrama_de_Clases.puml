@@ -159,6 +159,7 @@ abstract class MovimientoStock {
 
 class IngresoMercaderia {
   - nroIngreso : int  <<clave>>
+  - codigoProducto : String
   - nroLote : String
   - cantidad : int
   --
@@ -170,6 +171,7 @@ class IngresoMercaderia {
 
 class AjusteStock {
   - nroAjuste : int  <<clave>>
+  - codigoProducto : String
   - nroLote : String
   - cantidadReal : int
   - motivo : String

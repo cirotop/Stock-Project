@@ -1232,7 +1232,7 @@ skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
-participant "<u>ccv:ControladorConsultarVencimientosYStock</u>" as cpv
+participant "<u>cps:ControladorConsultarProximosAVencerYStock</u>" as cpv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>lotes[j]:Lote</u>" as li
@@ -1297,7 +1297,7 @@ skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
-participant "<u>ccv:ControladorConsultarVencimientosYStock</u>" as cpv
+participant "<u>cps:ControladorConsultarProximosAVencerYStock</u>" as cpv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
