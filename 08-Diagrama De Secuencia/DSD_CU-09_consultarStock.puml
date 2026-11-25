@@ -1,0 +1,79 @@
+@startuml DSD_CU-09_consultarStock
+' Diagrama de Secuencia de Diseño (DSD) - CU-09 Consultar vencimientos y stock vencido - consultarStock
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+
+actor "<u>u:Administrador/Empleado</u>" as u
+participant "<u>cpv:ControladorConsultarProximosAVencer</u>" as cpv
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
+participant "<u>vencidos[k]:StockVencido</u>" as vi
+
+u -> cpv ++ : consultarStock(codigoProducto : String)
+cpv -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
+cat --> cpv -- : «p : Producto»
+cpv -> cat ++ : calcularStockVigente(p : Producto)
+cat -> p ++ : getLotes()
+p --> cat -- : «lotes : Lote[]»
+group bucle [para cada lote en lotes]
+  cat -> li ++ : estaVencido(fecha : Date)
+  li --> cat -- : «vencido : boolean»
+  cat -> li ++ : getCantidadLote()
+  li --> cat -- : «cantidadLote : int»
+end
+note right of cat
+  si vencido = false
+  stockVigente = stockVigente + cantidadLote
+end note
+cat --> cpv -- : «stockVigente : int»
+cpv -> cat ++ : calcularStockVencido(p : Producto)
+cat -> p ++ : getCodigoProducto()
+p --> cat -- : «codigoProducto : String»
+group bucle [para cada stockVencido en vencidos]
+  cat -> vi ++ : getCodigoProducto()
+  vi --> cat -- : «codigo : String»
+  cat -> vi ++ : getCantidad()
+  vi --> cat -- : «cantidad : int»
+end
+note right of cat
+  si codigo = codigoProducto
+  stockVencido = stockVencido + cantidad
+end note
+cat --> cpv -- : «stockVencido : int»
+note right of cpv
+  stockVigente: suma de los lotes no vencidos (Lote)
+  stockVencido: suma de los vencidos sin retirar (StockVencido)
+  stockTotalFisico = stockVigente + stockVencido (RN-19)
+end note
+cpv --> u -- : «"vigente: " + stockVigente + ", vencido: " + stockVencido + ", total físico: " + stockTotalFisico : String»
+
+@enduml

@@ -40,8 +40,8 @@ note right of reg
 end note
 reg --> cgu -- : «us : Usuario»
 cgu -> us ++ : darBaja()
-note right of us : baja lógica: estadoUsuario = inactivo
+note right of us : baja lógica: el usuario queda inactivo
 us --> cgu --
-cgu --> adm -- : «usuario dado de baja»
+cgu --> adm -- : «"usuario dado de baja" : String»
 
 @enduml

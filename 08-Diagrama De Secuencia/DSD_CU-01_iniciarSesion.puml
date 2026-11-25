@@ -40,20 +40,19 @@ note right of reg
 end note
 reg --> ci -- : «us : Usuario»
 note right of ci : el control de acceso compara la contraseña\ningresada con la almacenada (hash)
-alt us != null y contraseña correcta
+alt el usuario existe y la contraseña es correcta
   ci -> us ++ : estaActivo()
   us --> ci -- : «activo : boolean»
-  alt activo = true
+  alt el usuario está activo
     ci -> us ++ : esAdministrador()
     us --> ci -- : «esAdmin : boolean»
     note right of ci : habilita las funciones del rol según esAdmin
-    note right of ci : muestra el panel de alertas de stock bajo\ny vencimientos (ver CU-08 y CU-09)
-    ci --> u : «funciones del rol + panel de alertas»
-  else activo = false (usuario dado de baja)
-    ci --> u : «"usuario o contraseña incorrectos"»
+    ci --> u : «"sesión iniciada" : String»
+  else el usuario no está activo
+    ci --> u : «"el usuario está inactivo" : String»
   end
-else usuario inexistente o contraseña incorrecta
-  ci --> u : «"usuario o contraseña incorrectos"»
+else el usuario no existe o la contraseña es incorrecta
+  ci --> u : «"usuario o contraseña incorrectos" : String»
 end
 deactivate ci
 

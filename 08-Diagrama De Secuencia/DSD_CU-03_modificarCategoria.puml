@@ -24,14 +24,14 @@ skinparam NoteBorderColor black
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
-participant "<u>categorias[i]:Categoria</u>" as ci
+participant "<u>categorias[i]:Categoria</u>" as ki
 participant "<u>c:Categoria</u>" as c
 
 adm -> cgc ++ : modificarCategoria(nombreActual : String, nombreCategoria : String, descripcionCategoria : String)
 cgc -> cat ++ : buscarCategoria(nombreActual : String)
 group bucle [para cada categoria en categorias]
-  cat -> ci ++ : getNombreCategoria()
-  ci --> cat -- : «nombre : String»
+  cat -> ki ++ : getNombreCategoria()
+  ki --> cat -- : «nombre : String»
 end
 note right of cat
   si nombre = nombreActual
@@ -41,6 +41,6 @@ end note
 cat --> cgc -- : «c : Categoria»
 cgc -> c ++ : modificar(nombreCategoria : String, descripcionCategoria : String)
 c --> cgc --
-cgc --> adm -- : «categoría modificada»
+cgc --> adm -- : «"categoría modificada" : String»
 
 @enduml

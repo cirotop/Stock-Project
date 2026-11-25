@@ -29,18 +29,18 @@ participant "<u>roles[i]:Rol</u>" as ri
 collections "<u>usuarios:Usuario</u>" as mu <<multiobjeto>>
 
 adm -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
-cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
+cgu -> reg ++ : existeUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
   reg -> ui ++ : getNombreUsuario()
   ui --> reg -- : «nombre : String»
 end
 note right of reg
   si nombre = nombreUsuario
-  existente = usuarios[i]
+  existe = true
   cortar iteración
 end note
-reg --> cgu -- : «existente : Usuario»
-alt existente = null (nombre disponible)
+reg --> cgu -- : «existe : boolean»
+alt el nombre de usuario no existe
   cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
   group bucle [para cada rol en roles]
     reg -> ri ++ : getNombreRol()
@@ -59,9 +59,9 @@ alt existente = null (nombre disponible)
   reg -> mu ++ : add(nu : Usuario)
   mu --> reg --
   reg --> cgu --
-  cgu --> adm : «usuario creado»
-else existente != null (nombre ya usado)
-  cgu --> adm : «"nombre de usuario no disponible"»
+  cgu --> adm : «"usuario creado" : String»
+else el nombre de usuario ya existe
+  cgu --> adm : «"nombre de usuario no disponible" : String»
 end
 deactivate cgu
 

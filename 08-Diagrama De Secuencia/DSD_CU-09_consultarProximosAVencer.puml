@@ -1,0 +1,53 @@
+@startuml DSD_CU-09_consultarProximosAVencer
+' Diagrama de Secuencia de Diseño (DSD) - CU-09 Consultar vencimientos y stock vencido - consultarProximosAVencer
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+
+actor "<u>u:Administrador/Empleado</u>" as u
+participant "<u>cpv:ControladorConsultarProximosAVencer</u>" as cpv
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>lotes[j]:Lote</u>" as li
+
+u -> cpv ++ : consultarProximosAVencer()
+cpv -> cat ++ : listarProximosAVencer(dias : int)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getLotes()
+  pi --> cat -- : «lotes : Lote[]»
+  group bucle [para cada lote en lotes]
+    cat -> li ++ : estaProximoAVencer(dias : int)
+    li --> cat -- : «proximo : boolean»
+  end
+end
+note right of cat
+  dias = 15 (RN-17)
+  si proximo
+  agregar lotes[j] a próximos a vencer
+end note
+cat --> cpv -- : «proximosAVencer : Lote[]»
+alt hay lotes próximos a vencer
+  cpv --> u : «proximosAVencer : String[]»
+else no hay lotes próximos a vencer
+  cpv --> u : «"no hay lotes por vencer" : String»
+end
+deactivate cpv
+
+@enduml

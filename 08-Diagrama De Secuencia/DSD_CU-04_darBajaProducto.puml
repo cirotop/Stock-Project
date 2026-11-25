@@ -40,8 +40,8 @@ note right of cat
 end note
 cat --> cgp -- : «p : Producto»
 cgp -> p ++ : darBaja()
-note right of p : baja lógica: estadoProducto = inactivo (RN-10)
+note right of p : baja lógica: el producto queda inactivo (RN-10)
 p --> cgp --
-cgp --> adm -- : «producto dado de baja»
+cgp --> adm -- : «"producto dado de baja" : String»
 
 @enduml

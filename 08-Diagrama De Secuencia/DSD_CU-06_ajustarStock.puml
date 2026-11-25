@@ -29,8 +29,8 @@ participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
 adm -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
-note right of cas : p es el producto obtenido en seleccionarProducto
-alt cantidadReal ≥ 0 y motivo cargado
+note right of cas : p es el producto elegido en seleccionarProducto
+alt la cantidad real no es negativa y hay motivo
   cas -> p ++ : buscarLote(nroLote : String)
   group bucle [para cada lote en lotes]
     p -> li ++ : getNroLote()
@@ -42,12 +42,10 @@ alt cantidadReal ≥ 0 y motivo cargado
     cortar iteración
   end note
   p --> cas -- : «lt : Lote»
+  cas -> lt ++ : corregirCantidad(cantidadReal : int)
+  lt --> cas -- : «cantidadLote : int»
   create participant "<u>aj:AjusteStock</u>" as aj
   cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
-  cas -> aj ++ : aplicar()
-  aj -> lt ++ : corregirCantidad(cantidadReal : int)
-  lt --> aj -- : «cantidadLote : int»
-  aj --> cas -- : «true»
   cas -> cat ++ : calcularStockVigente(p : Producto)
   cat -> p ++ : getLotes()
   p --> cat -- : «lotes : Lote[]»
@@ -57,14 +55,17 @@ alt cantidadReal ≥ 0 y motivo cargado
     cat -> li ++ : getCantidadLote()
     li --> cat -- : «cantidadLote : int»
   end
-  note right of cat : si vencido = false:\nstockVigente = stockVigente + cantidadLote
+  note right of cat
+    si vencido = false
+    stockVigente = stockVigente + cantidadLote
+  end note
   cat --> cas -- : «stockVigente : int»
   cas -> p ++ : tieneStockBajo()
   p --> cas -- : «stockBajo : boolean»
   note right of cas : si stockBajo = true, el producto aparece\nen el listado de stock bajo (RN-16)
-  cas --> adm : «ajuste registrado + stockVigente»
-else cantidadReal negativa o falta el motivo
-  cas --> adm : «"dato inválido o incompleto"»
+  cas --> adm : «"ajuste registrado, stock vigente: " + stockVigente : String»
+else la cantidad real es negativa o falta el motivo
+  cas --> adm : «"dato inválido o incompleto" : String»
 end
 deactivate cas
 

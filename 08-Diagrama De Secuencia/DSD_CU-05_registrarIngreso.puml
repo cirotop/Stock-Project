@@ -30,39 +30,45 @@ participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
 u -> cri ++ : registrarIngreso(codigoProducto : String, nroLote : String, cantidad : int, fechaVencimiento : Date)
-cri -> cat ++ : buscarProducto(codigoProducto : String)
-group bucle [para cada producto en productos]
-  cat -> pi ++ : getCodigoProducto()
-  pi --> cat -- : «codigo : String»
-end
-note right of cat
-  si codigo = codigoProducto
-  p = productos[i]
-  cortar iteración
-end note
-cat --> cri -- : «p : Producto»
-alt p = null (producto no existe)
-  cri --> u : «ofrece dar de alta el producto (CU-04) o cancelar»
-else cantidad inválida, o falta nroLote o fechaVencimiento
-  cri --> u : «"dato inválido o incompleto"»
-else producto existe y datos válidos
-  cri -> p ++ : buscarLote(nroLote : String)
-  group bucle [para cada lote en lotes]
-    p -> li ++ : getNroLote()
-    li --> p -- : «nro : String»
+alt los datos están completos y la cantidad es mayor a 0
+  cri -> cat ++ : buscarProducto(codigoProducto : String)
+  group bucle [para cada producto en productos]
+    cat -> pi ++ : getCodigoProducto()
+    pi --> cat -- : «codigo : String»
   end
-  note right of p
-    si nro = nroLote
-    lt = lotes[i]
+  note right of cat
+    si codigo = codigoProducto
+    p = productos[i]
     cortar iteración
   end note
-  p --> cri -- : «lt : Lote»
-  opt lt != null (el lote ya existe)
-    cri -> lt ++ : getFechaVencimiento()
-    lt --> cri -- : «fechaLote : Date»
+  cat --> cri -- : «p : Producto»
+  alt el producto existe
+    cri -> p ++ : buscarLote(nroLote : String)
+    group bucle [para cada lote en lotes]
+      p -> li ++ : getNroLote()
+      li --> p -- : «nro : String»
+    end
+    note right of p
+      si nro = nroLote
+      lt = lotes[i]
+      cortar iteración
+    end note
+    p --> cri -- : «lt : Lote»
+    opt el lote ya existe
+      cri -> lt ++ : getFechaVencimiento()
+      lt --> cri -- : «fechaLote : Date»
+    end
+    note right of cri
+      vencida = fechaVencimiento anterior a la fecha actual
+      el texto indica si es un lote nuevo o existente
+      (con fechaLote) y avisa si la mercadería está vencida
+    end note
+    cri --> u : «"ingreso a confirmar" : String»
+  else el producto no existe
+    cri --> u : «"el producto no existe" : String»
   end
-  note right of cri : vencida = fechaVencimiento anterior a la fecha actual
-  cri --> u : «a confirmar: lote nuevo o lote existente (con su fecha), y aviso si vencida = true»
+else falta un dato o la cantidad no es válida
+  cri --> u : «"dato inválido o incompleto" : String»
 end
 deactivate cri
 

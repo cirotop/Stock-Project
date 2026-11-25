@@ -53,6 +53,6 @@ end note
 reg --> cgu -- : «rol : Rol»
 cgu -> us ++ : modificar(nombreCompleto : String, rol : Rol)
 us --> cgu --
-cgu --> adm -- : «usuario modificado»
+cgu --> adm -- : «"usuario modificado" : String»
 
 @enduml

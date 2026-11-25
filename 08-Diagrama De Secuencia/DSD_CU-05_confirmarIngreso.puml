@@ -23,51 +23,25 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Administrador/Empleado</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
-participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>p:Producto</u>" as p
-participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 collections "<u>lotes:Lote</u>" as ml <<multiobjeto>>
 
 u -> cri ++ : confirmarIngreso()
-note right of cri : usa p, nroLote, cantidad y fechaVencimiento\nobtenidos en registrarIngreso
-create participant "<u>ing:IngresoMercaderia</u>" as ing
-cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
-cri -> ing ++ : aplicar()
-ing -> p ++ : buscarLote(nroLote : String)
-group bucle [para cada lote en lotes]
-  p -> li ++ : getNroLote()
-  li --> p -- : «nro : String»
-end
-note right of p
-  si nro = nroLote
-  lt = lotes[i]
-  cortar iteración
-end note
-p --> ing -- : «lt : Lote»
-alt lt = null (lote nuevo)
+note right of cri : p, lt y los datos son los cargados en registrarIngreso
+alt es un lote nuevo
   create participant "<u>nl:Lote</u>" as nl
-  ing -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
-  ing -> p ++ : agregarLote(nl : Lote)
+  cri -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
+  cri -> p ++ : agregarLote(nl : Lote)
   p -> ml ++ : add(nl : Lote)
   ml --> p --
-  p --> ing --
-else lt != null (se suma al lote existente)
-  ing -> lt ++ : aumentarCantidad(cantidad : int)
-  lt --> ing -- : «cantidadLote : int»
+  p --> cri --
+else el lote ya existe
+  cri -> lt ++ : aumentarCantidad(cantidad : int)
+  lt --> cri -- : «cantidadLote : int»
 end
-ing --> cri -- : «true»
-cri -> cat ++ : calcularStockVigente(p : Producto)
-cat -> p ++ : getLotes()
-p --> cat -- : «lotes : Lote[]»
-group bucle [para cada lote en lotes]
-  cat -> li ++ : estaVencido(fecha : Date)
-  li --> cat -- : «vencido : boolean»
-  cat -> li ++ : getCantidadLote()
-  li --> cat -- : «cantidadLote : int»
-end
-note right of cat : si vencido = false:\nstockVigente = stockVigente + cantidadLote
-cat --> cri -- : «stockVigente : int»
-cri --> u -- : «ingreso registrado + stockVigente»
+create participant "<u>ing:IngresoMercaderia</u>" as ing
+cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
+cri --> u -- : «"ingreso registrado" : String»
 
 @enduml

@@ -25,26 +25,26 @@ actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
-participant "<u>categorias[i]:Categoria</u>" as ci
+participant "<u>categorias[i]:Categoria</u>" as ki
 collections "<u>productos:Producto</u>" as mp <<multiobjeto>>
 
 adm -> cgp ++ : altaProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
-cgp -> cat ++ : buscarProducto(codigoProducto : String)
+cgp -> cat ++ : existeProducto(codigoProducto : String)
 group bucle [para cada producto en productos]
   cat -> pi ++ : getCodigoProducto()
   pi --> cat -- : «codigo : String»
 end
 note right of cat
   si codigo = codigoProducto
-  existente = productos[i]
+  existe = true
   cortar iteración
 end note
-cat --> cgp -- : «existente : Producto»
-alt existente = null (código disponible)
+cat --> cgp -- : «existe : boolean»
+alt el código de producto no existe
   cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
   group bucle [para cada categoria en categorias]
-    cat -> ci ++ : getNombreCategoria()
-    ci --> cat -- : «nombre : String»
+    cat -> ki ++ : getNombreCategoria()
+    ki --> cat -- : «nombre : String»
   end
   note right of cat
     si nombre = nombreCategoria
@@ -59,9 +59,9 @@ alt existente = null (código disponible)
   cat -> mp ++ : add(p : Producto)
   mp --> cat --
   cat --> cgp --
-  cgp --> adm : «producto creado»
-else existente != null (código ya registrado, RN-09)
-  cgp --> adm : «"código ya registrado"»
+  cgp --> adm : «"producto creado" : String»
+else el código ya está registrado (RN-09)
+  cgp --> adm : «"código ya registrado" : String»
 end
 deactivate cgp
 

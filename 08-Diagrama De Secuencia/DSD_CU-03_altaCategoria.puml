@@ -24,31 +24,31 @@ skinparam NoteBorderColor black
 actor "<u>adm:Administrador</u>" as adm
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
-participant "<u>categorias[i]:Categoria</u>" as ci
+participant "<u>categorias[i]:Categoria</u>" as ki
 collections "<u>categorias:Categoria</u>" as mc <<multiobjeto>>
 
 adm -> cgc ++ : altaCategoria(nombreCategoria : String, descripcionCategoria : String)
-cgc -> cat ++ : buscarCategoria(nombreCategoria : String)
+cgc -> cat ++ : existeCategoria(nombreCategoria : String)
 group bucle [para cada categoria en categorias]
-  cat -> ci ++ : getNombreCategoria()
-  ci --> cat -- : «nombre : String»
+  cat -> ki ++ : getNombreCategoria()
+  ki --> cat -- : «nombre : String»
 end
 note right of cat
   si nombre = nombreCategoria
-  existente = categorias[i]
+  existe = true
   cortar iteración
 end note
-cat --> cgc -- : «existente : Categoria»
-alt existente = null (nombre disponible)
+cat --> cgc -- : «existe : boolean»
+alt la categoría no existe
   create participant "<u>c:Categoria</u>" as c
   cgc -->> c : crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario)
   cgc -> cat ++ : agregarCategoria(c : Categoria)
   cat -> mc ++ : add(c : Categoria)
   mc --> cat --
   cat --> cgc --
-  cgc --> adm : «categoría creada»
-else existente != null (nombre ya registrado)
-  cgc --> adm : «"categoría ya registrada"»
+  cgc --> adm : «"categoría creada" : String»
+else la categoría ya existe
+  cgc --> adm : «"categoría ya registrada" : String»
 end
 deactivate cgc
 

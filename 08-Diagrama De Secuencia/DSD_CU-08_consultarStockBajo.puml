@@ -35,15 +35,14 @@ group bucle [para cada producto en productos]
   pi --> cat -- : «stockBajo : boolean»
 end
 note right of cat
-  si activo y stockBajo:
-  agregar productos[i] al resultado
-  (se recorren todos, no se corta)
+  si activo y stockBajo
+  agregar productos[i] a stockBajo
 end note
 cat --> csb -- : «stockBajo : Producto[]»
-alt stockBajo no está vacía
-  csb --> u : «productos a reponer»
-else stockBajo vacía
-  csb --> u : «"no hay productos con stock bajo"»
+alt hay productos con stock bajo
+  csb --> u : «productosStockBajo : String[]»
+else no hay productos con stock bajo
+  csb --> u : «"no hay productos con stock bajo" : String»
 end
 deactivate csb
 

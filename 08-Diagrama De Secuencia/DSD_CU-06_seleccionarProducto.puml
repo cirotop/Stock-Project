@@ -41,6 +41,7 @@ end note
 cat --> cas -- : «p : Producto»
 cas -> p ++ : getLotes()
 p --> cas -- : «lotes : Lote[]»
-cas --> adm -- : «lotes : Lote[]» (nroLote, fechaVencimiento y cantidad de cada uno)
+note right of cas : de cada lote se muestra nroLote,\nfechaVencimiento y cantidad
+cas --> adm -- : «lotes : String[]»
 
 @enduml

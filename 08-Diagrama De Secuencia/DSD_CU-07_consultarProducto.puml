@@ -1,5 +1,5 @@
-@startuml DSD_CU-07_leerEtiqueta
-' Diagrama de Secuencia de Diseño (DSD) - CU-07 Registrar retiro de mercadería vencida - leerEtiqueta
+@startuml DSD_CU-07_consultarProducto
+' Diagrama de Secuencia de Diseño (DSD) - CU-07 Registrar retiro de mercadería vencida - consultarProducto
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
 skinparam shadowing false
@@ -26,10 +26,9 @@ participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>vencidos[i]:StockVencido</u>" as vi
 participant "<u>sv:StockVencido</u>" as sv
-participant "<u>lt:Lote</u>" as lt
 
 note over u : el laboratorio retira físicamente la mercadería\ndel depósito (no interactúa con el sistema)
-u -> crv ++ : leerEtiqueta(codigoEtiqueta : String)
+u -> crv ++ : consultarProducto(codigoEtiqueta : String)
 crv -> cat ++ : buscarStockVencido(codigoEtiqueta : String)
 group bucle [para cada stockVencido en vencidos]
   cat -> vi ++ : getCodigoEtiqueta()
@@ -43,18 +42,14 @@ note right of cat
   cortar iteración
 end note
 cat --> crv -- : «sv : StockVencido»
-alt sv != null (etiqueta encontrada)
-  crv -> sv ++ : getLote()
-  sv --> crv -- : «lt : Lote»
-  crv -> lt ++ : getProducto()
-  lt --> crv -- : «p : Producto»
-  crv -> lt ++ : getFechaVencimiento()
-  lt --> crv -- : «fechaVencimiento : Date»
+alt la etiqueta corresponde a mercadería vencida
+  crv -> sv ++ : getCodigoProducto()
+  sv --> crv -- : «codigoProducto : String»
   crv -> sv ++ : getCantidad()
   sv --> crv -- : «cantidad : int»
-  crv --> u : «producto, cantidad y fecha de vencimiento del lote»
-else sv = null (etiqueta no encontrada)
-  crv --> u : «"etiqueta no encontrada"»
+  crv --> u : «"producto: " + codigoProducto + ", cantidad: " + cantidad : String»
+else la etiqueta no existe
+  crv --> u : «"etiqueta no encontrada" : String»
 end
 deactivate crv
 
