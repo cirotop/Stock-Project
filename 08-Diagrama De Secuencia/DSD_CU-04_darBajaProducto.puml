@@ -21,13 +21,13 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 
-adm -> cgp ++ : darBajaProducto(codigoProducto : String)
+u -> cgp ++ : darBajaProducto(codigoProducto : String)
 cgp -> cat ++ : buscarProducto(codigoProducto : String)
 group bucle [para cada producto en productos]
   cat -> pi ++ : getCodigoProducto()
@@ -42,6 +42,6 @@ cat --> cgp -- : «p : Producto»
 cgp -> p ++ : darBaja()
 note right of p : baja lógica: el producto queda inactivo (RN-10)
 p --> cgp --
-cgp --> adm -- : «"producto dado de baja" : String»
+cgp --> u -- : «"producto dado de baja" : String»
 
 @enduml

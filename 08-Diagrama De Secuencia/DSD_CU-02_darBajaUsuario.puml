@@ -21,13 +21,13 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>us:Usuario</u>" as us
 
-adm -> cgu ++ : darBajaUsuario(nombreUsuario : String)
+u -> cgu ++ : darBajaUsuario(nombreUsuario : String)
 cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
   reg -> ui ++ : getNombreUsuario()
@@ -42,6 +42,6 @@ reg --> cgu -- : «us : Usuario»
 cgu -> us ++ : darBaja()
 note right of us : baja lógica: el usuario queda inactivo
 us --> cgu --
-cgu --> adm -- : «"usuario dado de baja" : String»
+cgu --> u -- : «"usuario dado de baja" : String»
 
 @enduml

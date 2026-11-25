@@ -21,25 +21,25 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>categorias[i]:Categoria</u>" as ki
 collections "<u>productos:Producto</u>" as mp <<multiobjeto>>
 
-adm -> cgp ++ : altaProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
-cgp -> cat ++ : existeProducto(codigoProducto : String)
+u -> cgp ++ : altaProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
+cgp -> cat ++ : buscarProducto(codigoProducto : String)
 group bucle [para cada producto en productos]
   cat -> pi ++ : getCodigoProducto()
   pi --> cat -- : «codigo : String»
 end
 note right of cat
   si codigo = codigoProducto
-  existe = true
+  existente = productos[i]
   cortar iteración
 end note
-cat --> cgp -- : «existe : boolean»
+cat --> cgp -- : «existente : Producto»
 alt el código de producto no existe
   cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
   group bucle [para cada categoria en categorias]
@@ -59,9 +59,9 @@ alt el código de producto no existe
   cat -> mp ++ : add(p : Producto)
   mp --> cat --
   cat --> cgp --
-  cgp --> adm : «"producto creado" : String»
+  cgp --> u : «"producto creado" : String»
 else el código ya está registrado (RN-09)
-  cgp --> adm : «"código ya registrado" : String»
+  cgp --> u : «"código ya registrado" : String»
 end
 deactivate cgp
 

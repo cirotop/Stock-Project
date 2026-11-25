@@ -21,25 +21,25 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
 collections "<u>usuarios:Usuario</u>" as mu <<multiobjeto>>
 
-adm -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
-cgu -> reg ++ : existeUsuario(nombreUsuario : String)
+u -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
+cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
   reg -> ui ++ : getNombreUsuario()
   ui --> reg -- : «nombre : String»
 end
 note right of reg
   si nombre = nombreUsuario
-  existe = true
+  existente = usuarios[i]
   cortar iteración
 end note
-reg --> cgu -- : «existe : boolean»
+reg --> cgu -- : «existente : Usuario»
 alt el nombre de usuario no existe
   cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
   group bucle [para cada rol en roles]
@@ -59,9 +59,9 @@ alt el nombre de usuario no existe
   reg -> mu ++ : add(nu : Usuario)
   mu --> reg --
   reg --> cgu --
-  cgu --> adm : «"usuario creado" : String»
+  cgu --> u : «"usuario creado" : String»
 else el nombre de usuario ya existe
-  cgu --> adm : «"nombre de usuario no disponible" : String»
+  cgu --> u : «"nombre de usuario no disponible" : String»
 end
 deactivate cgu
 

@@ -21,13 +21,14 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>cpv:ControladorConsultarProximosAVencer</u>" as cpv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>vencidos[k]:StockVencido</u>" as vi
+participant "<u>lv:Lote</u>" as lv
 
 u -> cpv ++ : consultarStock(codigoProducto : String)
 cpv -> cat ++ : buscarProducto(codigoProducto : String)
@@ -56,16 +57,16 @@ note right of cat
 end note
 cat --> cpv -- : «stockVigente : int»
 cpv -> cat ++ : calcularStockVencido(p : Producto)
-cat -> p ++ : getCodigoProducto()
-p --> cat -- : «codigoProducto : String»
 group bucle [para cada stockVencido en vencidos]
-  cat -> vi ++ : getCodigoProducto()
-  vi --> cat -- : «codigo : String»
+  cat -> vi ++ : getLote()
+  vi --> cat -- : «lv : Lote»
+  cat -> lv ++ : getProducto()
+  lv --> cat -- : «producto : Producto»
   cat -> vi ++ : getCantidad()
   vi --> cat -- : «cantidad : int»
 end
 note right of cat
-  si codigo = codigoProducto
+  si producto = p
   stockVencido = stockVencido + cantidad
 end note
 cat --> cpv -- : «stockVencido : int»

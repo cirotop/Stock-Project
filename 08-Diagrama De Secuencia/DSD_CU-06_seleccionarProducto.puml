@@ -21,13 +21,13 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cas:ControladorAjustarStock</u>" as cas
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 
-adm -> cas ++ : seleccionarProducto(codigoProducto : String)
+u -> cas ++ : seleccionarProducto(codigoProducto : String)
 cas -> cat ++ : buscarProducto(codigoProducto : String)
 group bucle [para cada producto en productos]
   cat -> pi ++ : getCodigoProducto()
@@ -42,6 +42,6 @@ cat --> cas -- : «p : Producto»
 cas -> p ++ : getLotes()
 p --> cas -- : «lotes : Lote[]»
 note right of cas : de cada lote se muestra nroLote,\nfechaVencimiento y cantidad
-cas --> adm -- : «lotes : String[]»
+cas --> u -- : «lotes : String[]»
 
 @enduml

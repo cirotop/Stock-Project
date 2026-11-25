@@ -21,14 +21,14 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cas:ControladorAjustarStock</u>" as cas
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
-adm -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
+u -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
 note right of cas : p es el producto elegido en seleccionarProducto
 alt la cantidad real no es negativa y hay motivo
   cas -> p ++ : buscarLote(nroLote : String)
@@ -63,9 +63,9 @@ alt la cantidad real no es negativa y hay motivo
   cas -> p ++ : tieneStockBajo()
   p --> cas -- : «stockBajo : boolean»
   note right of cas : si stockBajo = true, el producto aparece\nen el listado de stock bajo (RN-16)
-  cas --> adm : «"ajuste registrado, stock vigente: " + stockVigente : String»
+  cas --> u : «"ajuste registrado, stock vigente: " + stockVigente : String»
 else la cantidad real es negativa o falta el motivo
-  cas --> adm : «"dato inválido o incompleto" : String»
+  cas --> u : «"dato inválido o incompleto" : String»
 end
 deactivate cas
 

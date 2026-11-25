@@ -45,7 +45,7 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>ci:ControladorIniciarSesion</u>" as ci
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
@@ -120,25 +120,25 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
 collections "<u>usuarios:Usuario</u>" as mu <<multiobjeto>>
 
-adm -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
-cgu -> reg ++ : existeUsuario(nombreUsuario : String)
+u -> cgu ++ : altaUsuario(nombreUsuario : String, contraseña : String, nombreCompleto : String, nombreRol : TipoRol)
+cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
   reg -> ui ++ : getNombreUsuario()
   ui --> reg -- : «nombre : String»
 end
 note right of reg
   si nombre = nombreUsuario
-  existe = true
+  existente = usuarios[i]
   cortar iteración
 end note
-reg --> cgu -- : «existe : boolean»
+reg --> cgu -- : «existente : Usuario»
 alt el nombre de usuario no existe
   cgu -> reg ++ : buscarRol(nombreRol : TipoRol)
   group bucle [para cada rol en roles]
@@ -158,9 +158,9 @@ alt el nombre de usuario no existe
   reg -> mu ++ : add(nu : Usuario)
   mu --> reg --
   reg --> cgu --
-  cgu --> adm : «"usuario creado" : String»
+  cgu --> u : «"usuario creado" : String»
 else el nombre de usuario ya existe
-  cgu --> adm : «"nombre de usuario no disponible" : String»
+  cgu --> u : «"nombre de usuario no disponible" : String»
 end
 deactivate cgu
 
@@ -200,14 +200,14 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
 participant "<u>us:Usuario</u>" as us
 
-adm -> cgu ++ : modificarUsuario(nombreUsuario : String, nombreCompleto : String, nombreRol : TipoRol)
+u -> cgu ++ : modificarUsuario(nombreUsuario : String, nombreCompleto : String, nombreRol : TipoRol)
 cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
   reg -> ui ++ : getNombreUsuario()
@@ -232,7 +232,7 @@ end note
 reg --> cgu -- : «rol : Rol»
 cgu -> us ++ : modificar(nombreCompleto : String, rol : Rol)
 us --> cgu --
-cgu --> adm -- : «"usuario modificado" : String»
+cgu --> u -- : «"usuario modificado" : String»
 
 @enduml
 ```
@@ -270,13 +270,13 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>us:Usuario</u>" as us
 
-adm -> cgu ++ : darBajaUsuario(nombreUsuario : String)
+u -> cgu ++ : darBajaUsuario(nombreUsuario : String)
 cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
   reg -> ui ++ : getNombreUsuario()
@@ -291,7 +291,7 @@ reg --> cgu -- : «us : Usuario»
 cgu -> us ++ : darBaja()
 note right of us : baja lógica: el usuario queda inactivo
 us --> cgu --
-cgu --> adm -- : «"usuario dado de baja" : String»
+cgu --> u -- : «"usuario dado de baja" : String»
 
 @enduml
 ```
@@ -333,24 +333,24 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>categorias[i]:Categoria</u>" as ki
 collections "<u>categorias:Categoria</u>" as mc <<multiobjeto>>
 
-adm -> cgc ++ : altaCategoria(nombreCategoria : String, descripcionCategoria : String)
-cgc -> cat ++ : existeCategoria(nombreCategoria : String)
+u -> cgc ++ : altaCategoria(nombreCategoria : String, descripcionCategoria : String)
+cgc -> cat ++ : buscarCategoria(nombreCategoria : String)
 group bucle [para cada categoria en categorias]
   cat -> ki ++ : getNombreCategoria()
   ki --> cat -- : «nombre : String»
 end
 note right of cat
   si nombre = nombreCategoria
-  existe = true
+  existente = categorias[i]
   cortar iteración
 end note
-cat --> cgc -- : «existe : boolean»
+cat --> cgc -- : «existente : Categoria»
 alt la categoría no existe
   create participant "<u>c:Categoria</u>" as c
   cgc -->> c : crear(nombreCategoria : String, descripcionCategoria : String, responsable : Usuario)
@@ -358,9 +358,9 @@ alt la categoría no existe
   cat -> mc ++ : add(c : Categoria)
   mc --> cat --
   cat --> cgc --
-  cgc --> adm : «"categoría creada" : String»
+  cgc --> u : «"categoría creada" : String»
 else la categoría ya existe
-  cgc --> adm : «"categoría ya registrada" : String»
+  cgc --> u : «"categoría ya registrada" : String»
 end
 deactivate cgc
 
@@ -400,13 +400,13 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgc:ControladorGestionarCategoria</u>" as cgc
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>categorias[i]:Categoria</u>" as ki
 participant "<u>c:Categoria</u>" as c
 
-adm -> cgc ++ : modificarCategoria(nombreActual : String, nombreCategoria : String, descripcionCategoria : String)
+u -> cgc ++ : modificarCategoria(nombreActual : String, nombreCategoria : String, descripcionCategoria : String)
 cgc -> cat ++ : buscarCategoria(nombreActual : String)
 group bucle [para cada categoria en categorias]
   cat -> ki ++ : getNombreCategoria()
@@ -420,7 +420,7 @@ end note
 cat --> cgc -- : «c : Categoria»
 cgc -> c ++ : modificar(nombreCategoria : String, descripcionCategoria : String)
 c --> cgc --
-cgc --> adm -- : «"categoría modificada" : String»
+cgc --> u -- : «"categoría modificada" : String»
 
 @enduml
 ```
@@ -462,25 +462,25 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>categorias[i]:Categoria</u>" as ki
 collections "<u>productos:Producto</u>" as mp <<multiobjeto>>
 
-adm -> cgp ++ : altaProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
-cgp -> cat ++ : existeProducto(codigoProducto : String)
+u -> cgp ++ : altaProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
+cgp -> cat ++ : buscarProducto(codigoProducto : String)
 group bucle [para cada producto en productos]
   cat -> pi ++ : getCodigoProducto()
   pi --> cat -- : «codigo : String»
 end
 note right of cat
   si codigo = codigoProducto
-  existe = true
+  existente = productos[i]
   cortar iteración
 end note
-cat --> cgp -- : «existe : boolean»
+cat --> cgp -- : «existente : Producto»
 alt el código de producto no existe
   cgp -> cat ++ : buscarCategoria(nombreCategoria : String)
   group bucle [para cada categoria en categorias]
@@ -500,9 +500,9 @@ alt el código de producto no existe
   cat -> mp ++ : add(p : Producto)
   mp --> cat --
   cat --> cgp --
-  cgp --> adm : «"producto creado" : String»
+  cgp --> u : «"producto creado" : String»
 else el código ya está registrado (RN-09)
-  cgp --> adm : «"código ya registrado" : String»
+  cgp --> u : «"código ya registrado" : String»
 end
 deactivate cgp
 
@@ -542,14 +542,14 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>categorias[i]:Categoria</u>" as ki
 participant "<u>p:Producto</u>" as p
 
-adm -> cgp ++ : modificarProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
+u -> cgp ++ : modificarProducto(codigoProducto : String, nombreProducto : String, descripcionProducto : String, nombreCategoria : String, stockMinimo : int)
 cgp -> cat ++ : buscarProducto(codigoProducto : String)
 group bucle [para cada producto en productos]
   cat -> pi ++ : getCodigoProducto()
@@ -574,7 +574,7 @@ end note
 cat --> cgp -- : «categoria : Categoria»
 cgp -> p ++ : modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int)
 p --> cgp --
-cgp --> adm -- : «"producto modificado" : String»
+cgp --> u -- : «"producto modificado" : String»
 
 @enduml
 ```
@@ -612,13 +612,13 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgp:ControladorGestionarProducto</u>" as cgp
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 
-adm -> cgp ++ : darBajaProducto(codigoProducto : String)
+u -> cgp ++ : darBajaProducto(codigoProducto : String)
 cgp -> cat ++ : buscarProducto(codigoProducto : String)
 group bucle [para cada producto en productos]
   cat -> pi ++ : getCodigoProducto()
@@ -633,7 +633,7 @@ cat --> cgp -- : «p : Producto»
 cgp -> p ++ : darBaja()
 note right of p : baja lógica: el producto queda inactivo (RN-10)
 p --> cgp --
-cgp --> adm -- : «"producto dado de baja" : String»
+cgp --> u -- : «"producto dado de baja" : String»
 
 @enduml
 ```
@@ -677,7 +677,7 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
@@ -764,7 +764,7 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
 participant "<u>p:Producto</u>" as p
 participant "<u>lt:Lote</u>" as lt
@@ -829,13 +829,13 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cas:ControladorAjustarStock</u>" as cas
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 
-adm -> cas ++ : seleccionarProducto(codigoProducto : String)
+u -> cas ++ : seleccionarProducto(codigoProducto : String)
 cas -> cat ++ : buscarProducto(codigoProducto : String)
 group bucle [para cada producto en productos]
   cat -> pi ++ : getCodigoProducto()
@@ -850,7 +850,7 @@ cat --> cas -- : «p : Producto»
 cas -> p ++ : getLotes()
 p --> cas -- : «lotes : Lote[]»
 note right of cas : de cada lote se muestra nroLote,\nfechaVencimiento y cantidad
-cas --> adm -- : «lotes : String[]»
+cas --> u -- : «lotes : String[]»
 
 @enduml
 ```
@@ -888,14 +888,14 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cas:ControladorAjustarStock</u>" as cas
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
-adm -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
+u -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
 note right of cas : p es el producto elegido en seleccionarProducto
 alt la cantidad real no es negativa y hay motivo
   cas -> p ++ : buscarLote(nroLote : String)
@@ -930,9 +930,9 @@ alt la cantidad real no es negativa y hay motivo
   cas -> p ++ : tieneStockBajo()
   p --> cas -- : «stockBajo : boolean»
   note right of cas : si stockBajo = true, el producto aparece\nen el listado de stock bajo (RN-16)
-  cas --> adm : «"ajuste registrado, stock vigente: " + stockVigente : String»
+  cas --> u : «"ajuste registrado, stock vigente: " + stockVigente : String»
 else la cantidad real es negativa o falta el motivo
-  cas --> adm : «"dato inválido o incompleto" : String»
+  cas --> u : «"dato inválido o incompleto" : String»
 end
 deactivate cas
 
@@ -976,11 +976,13 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>vencidos[i]:StockVencido</u>" as vi
 participant "<u>sv:StockVencido</u>" as sv
+participant "<u>lt:Lote</u>" as lt
+participant "<u>p:Producto</u>" as p
 
 note over u : el laboratorio retira físicamente la mercadería\ndel depósito (no interactúa con el sistema)
 u -> crv ++ : consultarProducto(codigoEtiqueta : String)
@@ -998,8 +1000,12 @@ note right of cat
 end note
 cat --> crv -- : «sv : StockVencido»
 alt la etiqueta corresponde a mercadería vencida
-  crv -> sv ++ : getCodigoProducto()
-  sv --> crv -- : «codigoProducto : String»
+  crv -> sv ++ : getLote()
+  sv --> crv -- : «lt : Lote»
+  crv -> lt ++ : getProducto()
+  lt --> crv -- : «p : Producto»
+  crv -> p ++ : getCodigoProducto()
+  p --> crv -- : «codigoProducto : String»
   crv -> sv ++ : getCantidad()
   sv --> crv -- : «cantidad : int»
   crv --> u : «"producto: " + codigoProducto + ", cantidad: " + cantidad : String»
@@ -1044,7 +1050,7 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
 participant "<u>sv:StockVencido</u>" as sv
 
@@ -1101,7 +1107,7 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>csb:ControladorConsultarStockBajo</u>" as csb
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
@@ -1166,7 +1172,7 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>cpv:ControladorConsultarProximosAVencer</u>" as cpv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
@@ -1231,13 +1237,14 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>cpv:ControladorConsultarProximosAVencer</u>" as cpv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>vencidos[k]:StockVencido</u>" as vi
+participant "<u>lv:Lote</u>" as lv
 
 u -> cpv ++ : consultarStock(codigoProducto : String)
 cpv -> cat ++ : buscarProducto(codigoProducto : String)
@@ -1266,16 +1273,16 @@ note right of cat
 end note
 cat --> cpv -- : «stockVigente : int»
 cpv -> cat ++ : calcularStockVencido(p : Producto)
-cat -> p ++ : getCodigoProducto()
-p --> cat -- : «codigoProducto : String»
 group bucle [para cada stockVencido en vencidos]
-  cat -> vi ++ : getCodigoProducto()
-  vi --> cat -- : «codigo : String»
+  cat -> vi ++ : getLote()
+  vi --> cat -- : «lv : Lote»
+  cat -> lv ++ : getProducto()
+  lv --> cat -- : «producto : Producto»
   cat -> vi ++ : getCantidad()
   vi --> cat -- : «cantidad : int»
 end
 note right of cat
-  si codigo = codigoProducto
+  si producto = p
   stockVencido = stockVencido + cantidad
 end note
 cat --> cpv -- : «stockVencido : int»

@@ -21,11 +21,13 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>vencidos[i]:StockVencido</u>" as vi
 participant "<u>sv:StockVencido</u>" as sv
+participant "<u>lt:Lote</u>" as lt
+participant "<u>p:Producto</u>" as p
 
 note over u : el laboratorio retira físicamente la mercadería\ndel depósito (no interactúa con el sistema)
 u -> crv ++ : consultarProducto(codigoEtiqueta : String)
@@ -43,8 +45,12 @@ note right of cat
 end note
 cat --> crv -- : «sv : StockVencido»
 alt la etiqueta corresponde a mercadería vencida
-  crv -> sv ++ : getCodigoProducto()
-  sv --> crv -- : «codigoProducto : String»
+  crv -> sv ++ : getLote()
+  sv --> crv -- : «lt : Lote»
+  crv -> lt ++ : getProducto()
+  lt --> crv -- : «p : Producto»
+  crv -> p ++ : getCodigoProducto()
+  p --> crv -- : «codigoProducto : String»
   crv -> sv ++ : getCantidad()
   sv --> crv -- : «cantidad : int»
   crv --> u : «"producto: " + codigoProducto + ", cantidad: " + cantidad : String»

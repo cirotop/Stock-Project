@@ -21,7 +21,7 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>u:Administrador/Empleado</u>" as u
+actor "<u>u:Usuario</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
 participant "<u>p:Producto</u>" as p
 participant "<u>lt:Lote</u>" as lt

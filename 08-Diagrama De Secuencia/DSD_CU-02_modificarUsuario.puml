@@ -21,14 +21,14 @@ skinparam SequenceGroupHeaderFontColor black
 skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
-actor "<u>adm:Administrador</u>" as adm
+actor "<u>u:Usuario</u>" as u
 participant "<u>cgu:ControladorGestionarUsuario</u>" as cgu
 participant "<u>reg:«Singleton»RegistroDeUsuarios</u>" as reg
 participant "<u>usuarios[i]:Usuario</u>" as ui
 participant "<u>roles[i]:Rol</u>" as ri
 participant "<u>us:Usuario</u>" as us
 
-adm -> cgu ++ : modificarUsuario(nombreUsuario : String, nombreCompleto : String, nombreRol : TipoRol)
+u -> cgu ++ : modificarUsuario(nombreUsuario : String, nombreCompleto : String, nombreRol : TipoRol)
 cgu -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
   reg -> ui ++ : getNombreUsuario()
@@ -53,6 +53,6 @@ end note
 reg --> cgu -- : «rol : Rol»
 cgu -> us ++ : modificar(nombreCompleto : String, rol : Rol)
 us --> cgu --
-cgu --> adm -- : «"usuario modificado" : String»
+cgu --> u -- : «"usuario modificado" : String»
 
 @enduml
