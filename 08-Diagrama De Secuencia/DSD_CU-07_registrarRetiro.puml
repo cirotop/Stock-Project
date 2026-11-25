@@ -28,10 +28,12 @@ participant "<u>sv:StockVencido</u>" as sv
 u -> crv ++ : registrarRetiro(cantidadRetirada : int)
 note right of crv : sv y cantidad son los obtenidos en consultarProducto
 alt la cantidad retirada no supera la cantidad vencida
-  crv -> sv ++ : descontar(cantidadRetirada : int)
-  sv --> crv -- : «cantidadRestante : int»
   create participant "<u>rv:RetiroVencido</u>" as rv
   crv -->> rv : registrar(sv : StockVencido, cantidadRetirada : int, responsable : Usuario)
+  crv -> rv ++ : aplicar()
+  rv -> sv ++ : descontar(cantidadRetirada : int)
+  sv --> rv -- : «cantidadRestante : int»
+  rv --> crv -- : «aplicado : boolean»
   crv --> u : «"retiro registrado" : String»
 else la cantidad retirada supera la cantidad vencida
   crv --> u : «"la cantidad supera la del lote" : String»

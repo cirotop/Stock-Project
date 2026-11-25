@@ -50,7 +50,6 @@ class Rol {
 class RegistroDeUsuarios <<Singleton>> {
   --
   + buscarUsuario(nombreUsuario : String) : Usuario
-  + existeUsuario(nombreUsuario : String) : boolean
   + buscarRol(nombreRol : TipoRol) : Rol
   + agregarUsuario(usuario : Usuario) : void
 }
@@ -78,9 +77,7 @@ class Usuario {
 class Catalogo <<Singleton>> {
   --
   + buscarProducto(codigoProducto : String) : Producto
-  + existeProducto(codigoProducto : String) : boolean
   + buscarCategoria(nombreCategoria : String) : Categoria
-  + existeCategoria(nombreCategoria : String) : boolean
   + buscarStockVencido(codigoEtiqueta : String) : StockVencido
   + agregarProducto(producto : Producto) : void
   + agregarCategoria(categoria : Categoria) : void
@@ -144,7 +141,6 @@ class StockVencido {
   + descontar(cantidad : int) : int
   + estaRetirado() : boolean
   + getCodigoEtiqueta() : String
-  + getCodigoProducto() : String
   + getCantidad() : int
   + getLote() : Lote
 }

@@ -23,7 +23,6 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cas:ControladorAjustarStock</u>" as cas
-participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
@@ -42,28 +41,13 @@ alt la cantidad real no es negativa y hay motivo
     cortar iteración
   end note
   p --> cas -- : «lt : Lote»
-  cas -> lt ++ : corregirCantidad(cantidadReal : int)
-  lt --> cas -- : «cantidadLote : int»
   create participant "<u>aj:AjusteStock</u>" as aj
   cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
-  cas -> cat ++ : calcularStockVigente(p : Producto)
-  cat -> p ++ : getLotes()
-  p --> cat -- : «lotes : Lote[]»
-  group bucle [para cada lote en lotes]
-    cat -> li ++ : estaVencido(fecha : Date)
-    li --> cat -- : «vencido : boolean»
-    cat -> li ++ : getCantidadLote()
-    li --> cat -- : «cantidadLote : int»
-  end
-  note right of cat
-    si vencido = false
-    stockVigente = stockVigente + cantidadLote
-  end note
-  cat --> cas -- : «stockVigente : int»
-  cas -> p ++ : tieneStockBajo()
-  p --> cas -- : «stockBajo : boolean»
-  note right of cas : si stockBajo = true, el producto aparece\nen el listado de stock bajo (RN-16)
-  cas --> u : «"ajuste registrado, stock vigente: " + stockVigente : String»
+  cas -> aj ++ : aplicar()
+  aj -> lt ++ : corregirCantidad(cantidadReal : int)
+  lt --> aj -- : «cantidadLote : int»
+  aj --> cas -- : «aplicado : boolean»
+  cas --> u : «"ajuste registrado" : String»
 else la cantidad real es negativa o falta el motivo
   cas --> u : «"dato inválido o incompleto" : String»
 end

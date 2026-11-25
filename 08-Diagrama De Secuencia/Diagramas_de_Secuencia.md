@@ -758,24 +758,38 @@ skinparam NoteBorderColor black
 actor "<u>u:Usuario</u>" as u
 participant "<u>cri:ControladorRegistrarIngreso</u>" as cri
 participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 collections "<u>lotes:Lote</u>" as ml <<multiobjeto>>
 
 u -> cri ++ : confirmarIngreso()
-note right of cri : p, lt y los datos son los cargados en registrarIngreso
-alt es un lote nuevo
-  create participant "<u>nl:Lote</u>" as nl
-  cri -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
-  cri -> p ++ : agregarLote(nl : Lote)
-  p -> ml ++ : add(nl : Lote)
-  ml --> p --
-  p --> cri --
-else el lote ya existe
-  cri -> lt ++ : aumentarCantidad(cantidad : int)
-  lt --> cri -- : «cantidadLote : int»
-end
+note right of cri : p y los datos son los cargados en registrarIngreso
 create participant "<u>ing:IngresoMercaderia</u>" as ing
 cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
+cri -> ing ++ : aplicar()
+ing -> p ++ : buscarLote(nroLote : String)
+group bucle [para cada lote en lotes]
+  p -> li ++ : getNroLote()
+  li --> p -- : «nro : String»
+end
+note right of p
+  si nro = nroLote
+  lt = lotes[i]
+  cortar iteración
+end note
+p --> ing -- : «lt : Lote»
+alt es un lote nuevo
+  create participant "<u>nl:Lote</u>" as nl
+  ing -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
+  ing -> p ++ : agregarLote(nl : Lote)
+  p -> ml ++ : add(nl : Lote)
+  ml --> p --
+  p --> ing --
+else el lote ya existe
+  ing -> lt ++ : aumentarCantidad(cantidad : int)
+  lt --> ing -- : «cantidadLote : int»
+end
+ing --> cri -- : «aplicado : boolean»
 cri --> u -- : «"ingreso registrado" : String»
 
 @enduml
@@ -881,7 +895,6 @@ skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
 participant "<u>cas:ControladorAjustarStock</u>" as cas
-participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
@@ -900,28 +913,13 @@ alt la cantidad real no es negativa y hay motivo
     cortar iteración
   end note
   p --> cas -- : «lt : Lote»
-  cas -> lt ++ : corregirCantidad(cantidadReal : int)
-  lt --> cas -- : «cantidadLote : int»
   create participant "<u>aj:AjusteStock</u>" as aj
   cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
-  cas -> cat ++ : calcularStockVigente(p : Producto)
-  cat -> p ++ : getLotes()
-  p --> cat -- : «lotes : Lote[]»
-  group bucle [para cada lote en lotes]
-    cat -> li ++ : estaVencido(fecha : Date)
-    li --> cat -- : «vencido : boolean»
-    cat -> li ++ : getCantidadLote()
-    li --> cat -- : «cantidadLote : int»
-  end
-  note right of cat
-    si vencido = false
-    stockVigente = stockVigente + cantidadLote
-  end note
-  cat --> cas -- : «stockVigente : int»
-  cas -> p ++ : tieneStockBajo()
-  p --> cas -- : «stockBajo : boolean»
-  note right of cas : si stockBajo = true, el producto aparece\nen el listado de stock bajo (RN-16)
-  cas --> u : «"ajuste registrado, stock vigente: " + stockVigente : String»
+  cas -> aj ++ : aplicar()
+  aj -> lt ++ : corregirCantidad(cantidadReal : int)
+  lt --> aj -- : «cantidadLote : int»
+  aj --> cas -- : «aplicado : boolean»
+  cas --> u : «"ajuste registrado" : String»
 else la cantidad real es negativa o falta el motivo
   cas --> u : «"dato inválido o incompleto" : String»
 end
@@ -1048,10 +1046,12 @@ participant "<u>sv:StockVencido</u>" as sv
 u -> crv ++ : registrarRetiro(cantidadRetirada : int)
 note right of crv : sv y cantidad son los obtenidos en consultarProducto
 alt la cantidad retirada no supera la cantidad vencida
-  crv -> sv ++ : descontar(cantidadRetirada : int)
-  sv --> crv -- : «cantidadRestante : int»
   create participant "<u>rv:RetiroVencido</u>" as rv
   crv -->> rv : registrar(sv : StockVencido, cantidadRetirada : int, responsable : Usuario)
+  crv -> rv ++ : aplicar()
+  rv -> sv ++ : descontar(cantidadRetirada : int)
+  sv --> rv -- : «cantidadRestante : int»
+  rv --> crv -- : «aplicado : boolean»
   crv --> u : «"retiro registrado" : String»
 else la cantidad retirada supera la cantidad vencida
   crv --> u : «"la cantidad supera la del lote" : String»
