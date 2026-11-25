@@ -27,7 +27,6 @@ participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
-participant "<u>lt:Lote</u>" as lt
 
 u -> cri ++ : registrarIngreso(codigoProducto : String, nroLote : String, cantidad : int, fechaVencimiento : Date)
 alt los datos están completos y la cantidad es mayor a 0
@@ -54,14 +53,10 @@ alt los datos están completos y la cantidad es mayor a 0
       cortar iteración
     end note
     p --> cri -- : «lt : Lote»
-    opt el lote ya existe
-      cri -> lt ++ : getFechaVencimiento()
-      lt --> cri -- : «fechaLote : Date»
-    end
     note right of cri
       vencida = fechaVencimiento anterior a la fecha actual
-      el texto indica si es un lote nuevo o existente
-      (con fechaLote) y avisa si la mercadería está vencida
+      el texto indica si es un lote nuevo o si el lote
+      ya existe, y avisa si la mercadería está vencida
     end note
     cri --> u : «"ingreso a confirmar" : String»
   else el producto no existe

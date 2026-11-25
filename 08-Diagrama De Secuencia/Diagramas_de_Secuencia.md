@@ -56,26 +56,22 @@ ci -> reg ++ : buscarUsuario(nombreUsuario : String)
 group bucle [para cada usuario en usuarios]
   reg -> ui ++ : getNombreUsuario()
   ui --> reg -- : «nombre : String»
+  reg -> ui ++ : estaActivo()
+  ui --> reg -- : «activo : boolean»
 end
 note right of reg
-  si nombre = nombreUsuario
+  si nombre = nombreUsuario y el usuario está activo
   us = usuarios[i]
   cortar iteración
 end note
 reg --> ci -- : «us : Usuario»
 note right of ci : el control de acceso compara la contraseña\ningresada con la almacenada (hash)
-alt el usuario existe y la contraseña es correcta
-  ci -> us ++ : estaActivo()
-  us --> ci -- : «activo : boolean»
-  alt el usuario está activo
-    ci -> us ++ : esAdministrador()
-    us --> ci -- : «esAdmin : boolean»
-    note right of ci : habilita las funciones del rol según esAdmin
-    ci --> u : «"sesión iniciada" : String»
-  else el usuario no está activo
-    ci --> u : «"el usuario está inactivo" : String»
-  end
-else el usuario no existe o la contraseña es incorrecta
+alt el usuario existe, está activo y la contraseña es correcta
+  ci -> us ++ : esAdministrador()
+  us --> ci -- : «esAdmin : boolean»
+  note right of ci : habilita las funciones del rol según esAdmin
+  ci --> u : «"sesión iniciada" : String»
+else el usuario no existe, está inactivo o la contraseña es incorrecta
   ci --> u : «"usuario o contraseña incorrectos" : String»
 end
 deactivate ci
@@ -683,7 +679,6 @@ participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
-participant "<u>lt:Lote</u>" as lt
 
 u -> cri ++ : registrarIngreso(codigoProducto : String, nroLote : String, cantidad : int, fechaVencimiento : Date)
 alt los datos están completos y la cantidad es mayor a 0
@@ -710,14 +705,10 @@ alt los datos están completos y la cantidad es mayor a 0
       cortar iteración
     end note
     p --> cri -- : «lt : Lote»
-    opt el lote ya existe
-      cri -> lt ++ : getFechaVencimiento()
-      lt --> cri -- : «fechaLote : Date»
-    end
     note right of cri
       vencida = fechaVencimiento anterior a la fecha actual
-      el texto indica si es un lote nuevo o existente
-      (con fechaLote) y avisa si la mercadería está vencida
+      el texto indica si es un lote nuevo o si el lote
+      ya existe, y avisa si la mercadería está vencida
     end note
     cri --> u : «"ingreso a confirmar" : String»
   else el producto no existe
@@ -1173,7 +1164,7 @@ skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
-participant "<u>cpv:ControladorConsultarProximosAVencer</u>" as cpv
+participant "<u>ccv:ControladorConsultarVencimientosYStock</u>" as cpv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>lotes[j]:Lote</u>" as li
@@ -1238,7 +1229,7 @@ skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
-participant "<u>cpv:ControladorConsultarProximosAVencer</u>" as cpv
+participant "<u>ccv:ControladorConsultarVencimientosYStock</u>" as cpv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
