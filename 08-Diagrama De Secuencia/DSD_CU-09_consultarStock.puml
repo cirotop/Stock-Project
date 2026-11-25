@@ -22,7 +22,7 @@ skinparam NoteBackgroundColor white
 skinparam NoteBorderColor black
 
 actor "<u>u:Usuario</u>" as u
-participant "<u>cpv:ControladorConsultarProximosAVencer</u>" as cpv
+participant "<u>ccv:ControladorConsultarVencimientosYStock</u>" as cpv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
