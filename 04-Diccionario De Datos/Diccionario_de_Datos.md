@@ -29,11 +29,11 @@ Flujos de datos en reposo. Cada uno se identifica por su clave natural (@):
 
     Producto = @codigoProducto + nombreProducto + (descripcionProducto) + nombreCategoria + stockMinimo + estadoProducto
 
-    Lote = @nroLote + codigoProducto + fechaVencimiento + cantidadLote
+    Lote = @codigoProducto + @nroLote + fechaVencimiento + cantidadLote
 
-    StockVencido = @codigoEtiqueta + nroLote + cantidad
+    StockVencido = @codigoEtiqueta + codigoProducto + nroLote + cantidad
 
-El vencimiento se maneja **por lote**: la mercadería ingresa en cajas y cada caja se carga con su número de lote, al que se le asigna la fecha de vencimiento que trae impresa (RN-03, RN-04). Un producto tiene tantos lotes como ingresos haya recibido, cada uno con su propia fecha de vencimiento y su propia cantidad.
+El vencimiento se maneja **por lote**: la mercadería ingresa en cajas y cada caja se carga con su número de lote, al que se le asigna la fecha de vencimiento que trae impresa (RN-03, RN-04). Un producto tiene tantos lotes como ingresos haya recibido, cada uno con su propia fecha de vencimiento y su propia cantidad. El número de lote no se repite dentro de un mismo producto, pero dos productos distintos pueden tener el mismo número: por eso el lote se identifica por el producto más su número.
 
 ---
 
@@ -51,9 +51,9 @@ No se almacenan: el sistema los calcula a partir de los lotes.
 
 Transacciones que actualizan el stock:
 
-    IngresoMercaderia = @nroIngreso + nroLote + cantidad + fechaIngreso + nombreUsuario
+    IngresoMercaderia = @nroIngreso + codigoProducto + nroLote + cantidad + fechaIngreso + nombreUsuario
 
-    AjusteStock = @nroAjuste + nroLote + cantidadReal + motivo + fechaAjuste + nombreUsuario
+    AjusteStock = @nroAjuste + codigoProducto + nroLote + cantidadReal + motivo + fechaAjuste + nombreUsuario
 
     RetiroVencido = @nroRetiro + codigoEtiqueta + cantidad + fechaRetiro + nombreUsuario
 
@@ -90,16 +90,16 @@ Mínimas unidades indivisibles de datos, con su nombre, descripción, longitud, 
 | descripcionProducto | Descripción del producto. | 200 | Alfanumérico | Texto libre |
 | stockMinimo | Umbral mínimo que dispara la alerta de reposición. | — | Numérico (entero) | Continuo: {vi: 0; vf: n} |
 | estadoProducto | Estado del producto. | 1 | Booleano | Discreto: {(1, activo); (0, inactivo)} |
-| nroLote | Número del lote que viene impreso en la caja (clave). | 30 | Alfanumérico | Texto libre |
-| fechaVencimiento | Fecha de vencimiento del lote, que vale para todas sus unidades. | — | Fecha | Continuo: {vi: fecha actual; vf: n} |
+| nroLote | Número del lote que viene impreso en la caja (clave junto con codigoProducto). | 30 | Alfanumérico | Texto libre |
+| fechaVencimiento | Fecha de vencimiento del lote, que vale para todas sus unidades. Puede ser anterior a la fecha actual si la mercadería llega vencida (CU-05, 3.c). | — | Fecha | Continuo: {vi: 01/01/2000; vf: n} |
 | cantidadLote | Cantidad de unidades vigentes que quedan en el lote. | — | Numérico (entero) | Continuo: {vi: 0; vf: n} |
 | codigoEtiqueta | Código de la etiqueta del lote vencido, que se lee al retirarlo (clave). | 30 | Alfanumérico | Texto libre |
-| cantidad | Cantidad de unidades del registro o movimiento. | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
+| cantidad | Cantidad de unidades del registro o movimiento. En los movimientos es al menos 1; en StockVencido llega a 0 cuando se retira todo. | — | Numérico (entero) | Continuo: {vi: 0; vf: n} |
 | nroIngreso | Identificador del ingreso de mercadería (clave). | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
-| fechaIngreso | Fecha del ingreso de mercadería. | — | Fecha | Continuo: {vi: 14/05/2026; vf: fecha actual} |
+| fechaIngreso | Fecha y hora del ingreso de mercadería (RN-07). | — | Fecha y hora | Continuo: {vi: 14/05/2026; vf: fecha actual} |
 | nroAjuste | Identificador del ajuste de stock (clave). | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
 | cantidadReal | Cantidad real contada que corrige la cantidad del lote. | — | Numérico (entero) | Continuo: {vi: 0; vf: n} |
 | motivo | Motivo de la corrección del stock. | 150 | Alfanumérico | Texto libre |
-| fechaAjuste | Fecha del ajuste de stock. | — | Fecha | Continuo: {vi: 14/05/2026; vf: fecha actual} |
+| fechaAjuste | Fecha y hora del ajuste de stock (RN-07). | — | Fecha y hora | Continuo: {vi: 14/05/2026; vf: fecha actual} |
 | nroRetiro | Identificador del retiro de mercadería vencida (clave). | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
-| fechaRetiro | Fecha del retiro de la mercadería vencida. | — | Fecha | Continuo: {vi: 14/05/2026; vf: fecha actual} |
+| fechaRetiro | Fecha y hora del retiro de la mercadería vencida (RN-07). | — | Fecha y hora | Continuo: {vi: 14/05/2026; vf: fecha actual} |

@@ -6,7 +6,9 @@
 ' 01-Entrevistas/Entrevista_#6 y 05-Caso De Uso/Casos_de_Uso.md.
 ' Alcance: solo control de stock. Fuera de alcance: ventas, facturacion, clientes,
 ' cuenta corriente, medios de pago, proveedores, caja y listas de precios.
-' El diccionario no define IDs internos: cada clase se identifica por su clave natural.
+' Las entidades se identifican por su clave natural; los movimientos, por su numero
+' (nroIngreso, nroAjuste, nroRetiro), como en el diccionario. El Lote se identifica
+' por su numero dentro del producto.
 ' Cada operacion declara sus datos de entrada (parametros) y de salida (tipo de retorno).
 ' Cada clase es responsable de sus propios datos: el alta es una operacion de clase
 ' (subrayada, {static}) de la clase que se crea, y recibe el usuario que la ejecuta.
@@ -41,8 +43,6 @@ class Rol {
   - nombreRol : TipoRol  <<clave>>
   - descripcionRol : String
   --
-  + {static} crear(nombreRol : TipoRol, descripcionRol : String, responsable : Usuario) : Rol
-  + modificar(descripcionRol : String) : void
   + getNombreRol() : TipoRol
   + tienePermisoTotal() : boolean
 }
@@ -118,7 +118,7 @@ class Producto {
 }
 
 class Lote {
-  - nroLote : String  <<clave>>
+  - nroLote : String  <<clave en el producto>>
   - fechaVencimiento : Date
   - cantidadLote : int
   --
@@ -158,7 +158,7 @@ abstract class MovimientoStock {
 }
 
 class IngresoMercaderia {
-  - codigoProducto : String
+  - nroIngreso : int  <<clave>>
   - nroLote : String
   - cantidad : int
   --
@@ -169,7 +169,7 @@ class IngresoMercaderia {
 }
 
 class AjusteStock {
-  - codigoProducto : String
+  - nroAjuste : int  <<clave>>
   - nroLote : String
   - cantidadReal : int
   - motivo : String
@@ -181,7 +181,7 @@ class AjusteStock {
 }
 
 class RetiroVencido {
-  - codigoProducto : String
+  - nroRetiro : int  <<clave>>
   - codigoEtiqueta : String
   - cantidad : int
   --
@@ -220,11 +220,11 @@ note bottom of Usuario
   sistema (control de acceso), no la entidad Usuario:
   por eso no son operaciones de esta clase. El usuario
   se busca en RegistroDeUsuarios.
-  RN-11: el alta, la modificacion y la baja de roles,
-  usuarios, categorias y productos, y el ajuste de stock,
-  exigen un usuario Administrador. Cada operacion lo
-  verifica con esAdministrador() sobre el usuario que
-  recibe como parametro. El ingreso, el retiro de
+  RN-11: el alta, la modificacion y la baja de usuarios,
+  categorias y productos, y el ajuste de stock, exigen un
+  usuario Administrador. El controlador de cada operacion
+  lo verifica con esAdministrador() sobre el usuario
+  responsable. Los roles son fijos (TipoRol). El ingreso, el retiro de
   vencidos y las consultas los puede ejecutar el Empleado.
 end note
 

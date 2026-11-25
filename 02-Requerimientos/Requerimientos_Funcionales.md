@@ -1,5 +1,7 @@
 # Requerimientos Funcionales - Stock Proyect
 
+> **Versión anterior a la 6ta entrevista.** La versión vigente es [Requerimientos post 6ta entrevista](Requerimientos_post%206ta%20entrevista.md).
+
 Funcionalidades que debe cumplir el sistema de gestión de la distribuidora de productos capilares, según lo relevado en las 5 entrevistas con Darío Fabián Conti.
 
 ## RF-01 Gestión de usuarios y seguridad

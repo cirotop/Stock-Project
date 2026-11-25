@@ -10,7 +10,7 @@
 - **CU-06 - Ajustar stock**: `seleccionarProducto`, `ajustarStock`
 - **CU-07 - Registrar retiro de mercadería vencida**: `consultarProducto`, `registrarRetiro`
 - **CU-08 - Consultar productos con stock bajo**: `consultarStockBajo`
-- **CU-09 - Consultar vencimientos y stock vencido**: `consultarProximosAVencer`, `consultarStock`
+- **CU-09 - Consultar próximos a vencer y stock**: `consultarProximosAVencer`, `consultarStock`
 
 ---
 
@@ -1198,7 +1198,7 @@ deactivate csb
 
 ---
 
-## CU-09 - Consultar vencimientos y stock vencido
+## CU-09 - Consultar próximos a vencer y stock
 
 ### `consultarProximosAVencer`
 
@@ -1209,7 +1209,7 @@ deactivate csb
 
 ```plantuml
 @startuml DSD_CU-09_consultarProximosAVencer
-' Diagrama de Secuencia de Diseño (DSD) - CU-09 Consultar vencimientos y stock vencido - consultarProximosAVencer
+' Diagrama de Secuencia de Diseño (DSD) - CU-09 Consultar próximos a vencer y stock - consultarProximosAVencer
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
 skinparam shadowing false
@@ -1274,7 +1274,7 @@ deactivate cpv
 
 ```plantuml
 @startuml DSD_CU-09_consultarStock
-' Diagrama de Secuencia de Diseño (DSD) - CU-09 Consultar vencimientos y stock vencido - consultarStock
+' Diagrama de Secuencia de Diseño (DSD) - CU-09 Consultar próximos a vencer y stock - consultarStock
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
 skinparam shadowing false

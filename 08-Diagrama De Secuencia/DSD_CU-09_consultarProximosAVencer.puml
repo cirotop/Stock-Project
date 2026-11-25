@@ -1,5 +1,5 @@
 @startuml DSD_CU-09_consultarProximosAVencer
-' Diagrama de Secuencia de Diseño (DSD) - CU-09 Consultar vencimientos y stock vencido - consultarProximosAVencer
+' Diagrama de Secuencia de Diseño (DSD) - CU-09 Consultar próximos a vencer y stock - consultarProximosAVencer
 ' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
 hide footbox
 skinparam shadowing false

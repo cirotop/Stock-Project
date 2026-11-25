@@ -19,15 +19,15 @@
 - Registro de ingreso de mercadería que incrementa el stock del producto.
 - Actualización automática del stock ante cada ingreso, movimiento o ajuste.
 - Definición de un stock mínimo por producto.
-- Alerta de stock bajo mostrada como listado/panel al ingresar al sistema.
+- Listado de consulta de los productos con stock bajo.
 - Ajuste manual de stock con registro del motivo.
 
 ### RF-04 Vencimiento y stock vencido (eje principal)
-- Registro de la fecha de vencimiento al ingresar la mercadería (una por caja).
+- Registro del número de lote y de su fecha de vencimiento al ingresar la mercadería (una fecha por lote).
 - Distinción del stock de cada producto entre **vigente** y **vencido**.
-- Cuando un producto alcanza su fecha de vencimiento, su stock pasa a contabilizarse como stock vencido.
+- Cuando un lote alcanza su fecha de vencimiento, su cantidad pasa a contabilizarse como stock vencido.
 - El stock vencido se descuenta del total únicamente al retirarse para su devolución al laboratorio, mediante la lectura de su etiqueta.
-- Alerta de productos próximos a vencer y de productos vencidos, mostrada como listado/panel.
+- Listado de consulta de los lotes próximos a vencer, y consulta del stock vigente, vencido y total físico de cada producto.
 
 ### RF-05 Datos
 - Migración de los datos de stock existentes desde las fuentes actuales (papel y planilla de Google).
@@ -44,7 +44,7 @@ Punto de venta / ventas, facturación, listas de precios, proveedores, clientes,
 
 - **RNF-01 Seguridad:** acceso autenticado con usuario y contraseña; restricción de funciones según el rol.
 - **RNF-02 Fiabilidad e integridad:** las bajas son lógicas (no se elimina información) y toda operación que modifica el stock queda registrada con el usuario y la fecha/hora.
-- **RNF-03 Usabilidad:** interfaz simple que reduzca la curva de aprendizaje en la transición del papel y la planilla de Google; las alertas de stock bajo, próximos a vencer y vencidos se presentan como un panel de consulta al ingresar.
+- **RNF-03 Usabilidad:** interfaz simple que reduzca la curva de aprendizaje en la transición del papel y la planilla de Google; las alertas de stock bajo y de próximos a vencer se presentan como listados de consulta.
 - **RNF-04 Eficiencia:** el sistema debe agilizar el registro y la consulta del stock respecto del proceso manual actual, con tiempos de respuesta ágiles.
 - **RNF-05 Disponibilidad:** respaldo automático de la información, dada la dependencia previa del papel y la planilla de Google.
 

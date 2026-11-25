@@ -1,5 +1,7 @@
 # Requerimientos No Funcionales - Stock Proyect
 
+> **Versión anterior a la 6ta entrevista.** La versión vigente es [Requerimientos post 6ta entrevista](Requerimientos_post%206ta%20entrevista.md).
+
 Cualidades y restricciones técnicas que debe cumplir el sistema, derivadas de lo relevado en las entrevistas con Darío Fabián Conti.
 
 ## RNF-01 Seguridad

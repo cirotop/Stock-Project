@@ -1,5 +1,7 @@
 # Reglas de Negocio
 
+> **Versión anterior a la 6ta entrevista.** La versión vigente es [Reglas de Negocio 6ta entrevista](Reglas_de_Negocio_6ta_entrevista.md).
+
 > Versión alineada a las 5 entrevistas. Se corrigieron las reglas basadas en supuestos de lotes/FEFO y se agregaron las reglas de cuenta corriente, caja y vencimientos. Se eliminaron RN-12 (FEFO) y RN-27 (baja rotación) por no tener respaldo en ninguna entrevista; los números se conservan para no romper referencias previas.
 
 ---

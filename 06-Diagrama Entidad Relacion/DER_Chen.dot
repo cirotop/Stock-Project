@@ -3,6 +3,8 @@
 // Diagrama Entidad-Relacion - Notacion de Chen - Stock Project
 // [rectangulo] = entidad   <rombo> = relacion (sin atributos)   (elipse) = atributo
 // atributo subrayado = clave    elipse punteada = atributo derivado
+// doble rectangulo = entidad debil (Lote: su numero solo es unico dentro del producto)
+// doble rombo = relacion identificadora
 //
 // El vencimiento se maneja por LOTE: cada caja ingresa con su numero de lote
 // y a ese lote se le asigna la fecha de vencimiento impresa (RN-03, RN-04).
@@ -18,7 +20,7 @@ graph DER_Chen {
   Usuario       [label="Usuario"];
   Categoria     [label="Categoria"];
   Producto      [label="Producto"];
-  Lote          [label="Lote"];
+  Lote          [label="Lote", peripheries=2];
   StockVencido  [label="StockVencido"];
 
   // Los movimientos de stock son entidades, no relaciones:
@@ -31,7 +33,7 @@ graph DER_Chen {
   node [shape=diamond, style=filled, fillcolor="#F3E9DD", color="#444444", width=1.5, height=0.9];
   R_Asigna     [label="Asigna"];
   R_Clasifica  [label="Clasifica"];
-  R_Agrupa     [label="Agrupa"];
+  R_Agrupa     [label="Agrupa", peripheries=2];
   R_Vence      [label="Vence en"];
   R_Registra   [label="Registra"];
   R_Crea       [label="Crea"];
@@ -68,7 +70,7 @@ graph DER_Chen {
   A_stockTotal          [label="stockTotalFisico", style="filled,dashed", fillcolor="#F7F7F7"];
 
   // -- Lote --
-  A_nroLote      [label=<<U>nroLote</U>>];
+  A_nroLote      [label=<<U>nroLote</U>>];   // clave parcial: se identifica junto con el producto
   A_fechaVenc    [label="fechaVencimiento"];
   A_cantidadLote [label="cantidadLote"];
 
@@ -119,7 +121,7 @@ graph DER_Chen {
   Producto -- R_Agrupa     [label="1"];
   R_Agrupa -- Lote         [label="N"];
   Lote     -- R_Vence      [label="1"];
-  R_Vence  -- StockVencido [label="N"];
+  R_Vence  -- StockVencido [label="1"];
 
   // Ingreso de mercaderia: crea el lote con su fecha de vencimiento
   Usuario           -- R_Registra        [label="1"];
