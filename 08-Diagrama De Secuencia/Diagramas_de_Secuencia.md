@@ -859,6 +859,7 @@ p --> ing -- : «lt : Lote»
 alt es un lote nuevo
   create participant "<u>nl:Lote</u>" as nl
   ing -->> nl : crear(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date)
+  note right of nl : fechaPrimerIngreso = fecha actual\n(no cambia si después se suma\nmercadería al lote, RN-24)
   ing -> p ++ : agregarLote(nl : Lote)
   p -> ml ++ : add(nl : Lote)
   ml --> p --
@@ -1629,6 +1630,7 @@ participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
+collections "<u>detalles:DetalleEgreso</u>" as md <<multiobjeto>>
 
 u -> ceg ++ : registrarEgreso(codigoProducto : String, cantidad : int)
 ceg -> cat ++ : buscarProducto(codigoProducto : String)
@@ -1663,18 +1665,24 @@ alt el producto existe
     create participant "<u>eg:EgresoMercaderia</u>" as eg
     ceg -->> eg : registrar(p : Producto, cantidad : int, responsable : Usuario)
     ceg -> eg ++ : aplicar()
-    eg -> p ++ : getLotes()
+    eg -> p ++ : getLotesPorIngreso()
     p --> eg -- : «lotes : Lote[]»
-    note right of eg : restante = cantidad\nlos lotes están en el orden en que ingresaron (FIFO)
+    note right of eg : restante = cantidad\nlos lotes vienen ordenados por\nfechaPrimerIngreso (FIFO, RN-24)
     group bucle [para cada lote en lotes, mientras restante > 0]
       eg -> li ++ : estaVencido(fecha : Date)
       li --> eg -- : «vencido : boolean»
       opt el lote no está vencido
         eg -> li ++ : descontar(restante : int)
         li --> eg -- : «descontado : int»
+        opt descontado > 0
+          create participant "<u>dt:DetalleEgreso</u>" as dt
+          eg -->> dt : crear(eg : EgresoMercaderia, lotes[i] : Lote, descontado : int)
+          eg -> md ++ : add(dt : DetalleEgreso)
+          md --> eg --
+        end
       end
     end
-    note right of eg : descontado = lo que el lote pudo dar\nrestante = restante - descontado (RN-24)
+    note right of eg : descontado = lo que el lote pudo dar\nrestante = restante - descontado\ncada DetalleEgreso guarda cuánto salió de ese lote (RN-24)
     eg --> ceg -- : «aplicado : boolean»
     ceg --> u : «"egreso registrado" : String»
   else el producto está inactivo o la cantidad no es válida
