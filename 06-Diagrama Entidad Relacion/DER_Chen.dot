@@ -4,7 +4,8 @@
 // [rectangulo] = entidad   <rombo> = relacion (sin atributos)   (elipse) = atributo
 // atributo subrayado = clave    elipse punteada = atributo derivado
 // doble rectangulo = entidad debil (Lote: su numero solo es unico dentro del producto;
-//                    StockVencido: se identifica por su lote)
+//                    StockVencido: se identifica por su lote;
+//                    DetalleEgreso: se identifica por su egreso + el lote descontado)
 // doble rombo = relacion identificadora
 //
 // El vencimiento se maneja por LOTE: el fabricante imprime en la caja el numero de lote
@@ -29,6 +30,7 @@ graph DER_Chen {
   // de ese modo las relaciones quedan sin atributos.
   IngresoMercaderia [label="IngresoMercaderia"];
   EgresoMercaderia  [label="EgresoMercaderia"];
+  DetalleEgreso     [label="DetalleEgreso", peripheries=2];
   AjusteStock       [label="AjusteStock"];
   TrasladoVencido   [label="TrasladoVencido"];
   RetiroVencido     [label="RetiroVencido"];
@@ -44,6 +46,7 @@ graph DER_Chen {
   R_Realiza    [label="Realiza"];
   R_Corrige    [label="Corrige"];
   R_Emite      [label="Emite"];
+  R_Detalla    [label="Detalla", peripheries=2];
   R_SaleDe     [label="Sale de"];
   R_Hace       [label="Hace"];
   R_Traslada   [label="Traslada"];
@@ -82,6 +85,7 @@ graph DER_Chen {
   A_nroLote      [label=<<U>nroLote</U>>];   // clave parcial (nroLote + fechaVencimiento) junto con el producto
   A_fechaVenc    [label=<<U>fechaVencimiento</U>>];
   A_cantidadLote [label="cantidadLote"];
+  A_fechaPrimerIngreso [label="fechaPrimerIngreso"];   // ordena el egreso por FIFO (RN-24)
 
   // -- StockVencido (se identifica por su lote: codigoProducto + nroLote + fechaVencimiento) --
   A_cantidadVencida [label="cantidad"];
@@ -96,6 +100,9 @@ graph DER_Chen {
   A_nroEgreso   [label=<<U>nroEgreso</U>>];
   A_cantEgreso  [label="cantidad"];
   A_fechaEgreso [label="fechaEgreso"];
+
+  // -- DetalleEgreso (se identifica por su egreso + el lote descontado) --
+  A_cantDescontada [label="cantidadDescontada"];
 
   // -- AjusteStock --
   A_nroAjuste    [label=<<U>nroAjuste</U>>];
@@ -120,11 +127,12 @@ graph DER_Chen {
   Categoria -- {A_nombreCategoria A_descripcionCategoria};
   Producto -- {A_codigoProducto A_nombreProducto A_descripcionProducto A_stockMinimo A_estadoProducto};
   Producto -- {A_stockVigente A_stockPendiente A_stockVencidoD A_stockTotal} [style=dashed];
-  Lote -- {A_nroLote A_fechaVenc A_cantidadLote};
+  Lote -- {A_nroLote A_fechaVenc A_fechaPrimerIngreso A_cantidadLote};
   StockVencido -- {A_cantidadVencida};
 
   IngresoMercaderia -- {A_nroIngreso A_cantIngreso A_depositoIngreso A_fechaIngreso};
   EgresoMercaderia  -- {A_nroEgreso A_cantEgreso A_fechaEgreso};
+  DetalleEgreso     -- {A_cantDescontada};
   AjusteStock       -- {A_nroAjuste A_cantidadReal A_motivo A_fechaAjuste};
   TrasladoVencido   -- {A_nroTraslado A_cantTraslado A_fechaTraslado};
   RetiroVencido     -- {A_nroRetiro A_cantRetiro A_fechaRetiro};
@@ -150,11 +158,15 @@ graph DER_Chen {
   IngresoMercaderia -- R_Crea            [label="N"];
   R_Crea            -- Lote              [label="1"];
 
-  // Egreso de mercaderia: descuenta de los lotes vigentes por FIFO
-  Usuario          -- R_Emite         [label="1"];
+  // Egreso de mercaderia: descuenta de los lotes vigentes por FIFO.
+  // La N:M entre egreso y lote se materializa en DetalleEgreso,
+  // que guarda cuanto se desconto de cada lote (RN-24).
+  Usuario          -- R_Emite          [label="1"];
   R_Emite          -- EgresoMercaderia [label="N"];
-  EgresoMercaderia -- R_SaleDe        [label="N"];
-  R_SaleDe         -- Lote            [label="M"];
+  EgresoMercaderia -- R_Detalla        [label="1"];
+  R_Detalla        -- DetalleEgreso    [label="N"];
+  DetalleEgreso    -- R_SaleDe         [label="N"];
+  R_SaleDe         -- Lote             [label="1"];
 
   // Ajuste de stock: corrige la cantidad de un lote
   Usuario     -- R_Realiza   [label="1"];
