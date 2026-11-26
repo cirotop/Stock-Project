@@ -126,7 +126,7 @@ c. Baja: el Administrador busca un producto y lo da de baja (queda inactivo, no 
 1. El usuario selecciona la opción de ingreso de mercadería.
 2. Selecciona el producto (por código o nombre).
 3. Ingresa el número de lote y la fecha de vencimiento que el fabricante imprime en la caja, y la cantidad recibida. La fecha vale para todas las unidades del lote (RN-04).
-4. El sistema da de alta el lote con esa fecha de vencimiento y esa cantidad, asociado al producto (RN-14). Si ya hay un lote con el mismo número pero otra fecha, se da de alta como un lote distinto (RN-27).
+4. El sistema da de alta el lote con esa fecha de vencimiento y esa cantidad, asociado al producto, y guarda la fecha de primer ingreso del lote (RN-14, RN-24). Si ya hay un lote con el mismo número pero otra fecha, se da de alta como un lote distinto (RN-27).
 5. El sistema registra el movimiento con el usuario y la fecha (RN-07).
 6. El sistema confirma que el ingreso quedó registrado.
 
@@ -285,8 +285,8 @@ c. Baja: el Administrador busca un producto y lo da de baja (queda inactivo, no 
 **Camino básico:**
 1. El usuario escanea el código de barras del producto e ingresa la cantidad que sale.
 2. El sistema verifica que el producto esté activo y que la cantidad no supere su stock vigente.
-3. El sistema descuenta la cantidad de los lotes vigentes del producto, empezando por el que ingresó primero (FIFO, RN-24).
-4. El sistema registra el egreso con el usuario y la fecha (RN-07).
+3. El sistema descuenta la cantidad de los lotes vigentes del producto, empezando por el de fecha de primer ingreso más antigua (FIFO, RN-24).
+4. El sistema registra el egreso con el usuario y la fecha (RN-07), y el detalle de cuánto descontó de cada lote.
 5. El sistema confirma que el egreso quedó registrado.
 
 **Caminos alternativos:**
@@ -295,7 +295,7 @@ c. Baja: el Administrador busca un producto y lo da de baja (queda inactivo, no 
 2.a El producto está inactivo, la cantidad es 0 o supera el stock vigente.
 2.a.1 El sistema avisa que la cantidad no es válida y vuelve al paso 1.
 
-**Postcondiciones:** El stock vigente del producto queda descontado y el egreso queda registrado con su usuario y fecha. Si el stock vigente queda en o por debajo del mínimo, el producto aparece en el listado de stock bajo (RN-16). El egreso no guarda datos de venta (cliente, precio ni factura), que siguen fuera de alcance.
+**Postcondiciones:** El stock vigente del producto queda descontado y el egreso queda registrado con su usuario, su fecha y la cantidad descontada de cada lote. Si el stock vigente queda en o por debajo del mínimo, el producto aparece en el listado de stock bajo (RN-16). El egreso no guarda datos de venta (cliente, precio ni factura), que siguen fuera de alcance.
 
 **Escenario de éxito:** la mercadería que salió se descontó del stock vigente.
 **Escenario de fracaso:** no se descontó porque el producto no existía o la cantidad no era válida.
