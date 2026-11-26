@@ -118,6 +118,7 @@ class Producto {
   + buscarLote(nroLote : String, fechaVencimiento : Date) : Lote
   + agregarLote(lote : Lote) : void
   + getLotes() : Lote[]
+  + getLotesPorIngreso() : Lote[]
   + getCodigoProducto() : String
   + tieneStockBajo() : boolean
   + estaActivo() : boolean
@@ -126,6 +127,7 @@ class Producto {
 class Lote {
   - nroLote : String  <<clave en el producto>>
   - fechaVencimiento : Date  <<clave en el producto>>
+  - fechaPrimerIngreso : Date
   - cantidadLote : int
   --
   + {static} crear(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date) : Lote
@@ -139,6 +141,7 @@ class Lote {
   + getNroLote() : String
   + getCantidadLote() : int
   + getFechaVencimiento() : Date
+  + getFechaPrimerIngreso() : Date
   + getProducto() : Producto
   + getStockVencido() : StockVencido
 }
@@ -186,8 +189,18 @@ class EgresoMercaderia {
   --
   + {static} registrar(producto : Producto, cantidad : int, responsable : Usuario) : EgresoMercaderia
   + aplicar() : boolean
+  + agregarDetalle(detalle : DetalleEgreso) : void
+  + getDetalles() : DetalleEgreso[]
   + getProducto() : Producto
   + getCantidad() : int
+}
+
+class DetalleEgreso {
+  - cantidadDescontada : int
+  --
+  + {static} crear(egreso : EgresoMercaderia, lote : Lote, cantidadDescontada : int) : DetalleEgreso
+  + getLote() : Lote
+  + getCantidadDescontada() : int
 }
 
 class AjusteStock {
@@ -253,7 +266,8 @@ MovimientoStock <|-- RetiroVencido
 Usuario "1" -- "0..*" MovimientoStock : registra >
 
 IngresoMercaderia "0..*" --> "1" Lote : crea >
-EgresoMercaderia "0..*" --> "1..*" Lote : descuenta de >
+EgresoMercaderia "1" *-- "1..*" DetalleEgreso : detalla >
+DetalleEgreso "0..*" --> "1" Lote : descuenta de >
 AjusteStock "0..*" --> "1" Lote : corrige >
 TrasladoVencido "0..1" --> "1" Lote : traslada >
 RetiroVencido "0..*" --> "1" StockVencido : descuenta >
@@ -291,7 +305,9 @@ note bottom of Lote
   StockVencido. RN-26: un lote vencido no recibe
   ingresos ni ajustes.
   RN-24: el egreso descuenta de los lotes vigentes
-  en el orden en que ingresaron (FIFO).
+  ordenados por fechaPrimerIngreso (FIFO); si el lote
+  recibe mas mercaderia, esa fecha no cambia. Cuanto
+  se desconto de cada lote queda en DetalleEgreso.
   RN-15: al vencer queda pendiente de traslado
   (estaVencido y cantidadLote > 0).
   RN-23: al trasladarlo (CU-10), trasladarAVencido()
