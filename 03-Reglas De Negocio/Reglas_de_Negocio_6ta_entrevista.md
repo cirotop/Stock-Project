@@ -31,7 +31,7 @@
 - **RN-17** Cuando un lote está a 15 días o menos de su fecha de vencimiento, el sistema lo marca en el listado de próximos a vencer.
 - **RN-18** Cuando se retira mercadería vencida para devolverla al laboratorio y se leen el código del producto, el número de lote y la fecha de vencimiento, se descuenta esa cantidad del stock vencido.
 - **RN-23** Cuando el usuario traslada un lote vencido al depósito de vencidos y se leen el código del producto, el número de lote y la fecha de vencimiento, toda la cantidad que queda en el lote pasa al stock vencido (tabla aparte) y el lote queda en 0.
-- **RN-24** Al registrar un egreso de mercadería, la cantidad que sale se descuenta del stock vigente del producto, empezando por el lote que ingresó primero (FIFO); los lotes vencidos no se descuentan.
+- **RN-24** Al registrar un egreso de mercadería, la cantidad que sale se descuenta del stock vigente del producto, empezando por el lote con la fecha de primer ingreso más antigua (FIFO); los lotes vencidos no se descuentan. Si un lote recibe más mercadería (mismo número y misma fecha de vencimiento), es la misma partida del fabricante y conserva su fecha de primer ingreso. El egreso registra cuánto se descontó de cada lote.
 - **RN-25** Si la mercadería ingresa ya vencida, el usuario elige dónde se guarda: en el depósito principal queda como stock pendiente de traslado; en el depósito de vencidos pasa directamente a stock vencido.
 
 ## Cálculos
