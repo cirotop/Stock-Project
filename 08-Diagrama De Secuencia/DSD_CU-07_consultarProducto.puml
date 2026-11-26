@@ -24,38 +24,50 @@ skinparam NoteBorderColor black
 actor "<u>u:Usuario</u>" as u
 participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
-participant "<u>vencidos[i]:StockVencido</u>" as vi
-participant "<u>sv:StockVencido</u>" as sv
-participant "<u>lt:Lote</u>" as lt
+participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
+participant "<u>lt:Lote</u>" as lt
+participant "<u>sv:StockVencido</u>" as sv
 
 note over u : el laboratorio retira físicamente la mercadería\ndel depósito (no interactúa con el sistema)
-u -> crv ++ : consultarProducto(codigoEtiqueta : String)
-crv -> cat ++ : buscarStockVencido(codigoEtiqueta : String)
-group bucle [para cada stockVencido en vencidos]
-  cat -> vi ++ : getCodigoEtiqueta()
-  vi --> cat -- : «codigo : String»
-  cat -> vi ++ : estaRetirado()
-  vi --> cat -- : «retirado : boolean»
+u -> crv ++ : consultarProducto(codigoProducto : String, nroLote : String, fechaVencimiento : Date)
+crv -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
 end
 note right of cat
-  si codigo = codigoEtiqueta y retirado = false
-  sv = vencidos[i]
+  si codigo = codigoProducto
+  p = productos[i]
   cortar iteración
 end note
-cat --> crv -- : «sv : StockVencido»
-alt la etiqueta corresponde a mercadería vencida
-  crv -> sv ++ : getLote()
-  sv --> crv -- : «lt : Lote»
-  crv -> lt ++ : getProducto()
-  lt --> crv -- : «p : Producto»
-  crv -> p ++ : getCodigoProducto()
-  p --> crv -- : «codigoProducto : String»
+cat --> crv -- : «p : Producto»
+alt el producto existe
+  crv -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
+  group bucle [para cada lote en lotes]
+    p -> li ++ : getNroLote()
+    li --> p -- : «nro : String»
+    p -> li ++ : getFechaVencimiento()
+    li --> p -- : «fecha : Date»
+  end
+  note right of p
+    si nro = nroLote y fecha = fechaVencimiento
+    lt = lotes[i]
+    cortar iteración
+  end note
+  p --> crv -- : «lt : Lote»
+  crv -> lt ++ : getStockVencido()
+  lt --> crv -- : «sv : StockVencido»
   crv -> sv ++ : getCantidad()
   sv --> crv -- : «cantidad : int»
-  crv --> u : «"producto: " + codigoProducto + ", cantidad: " + cantidad : String»
-else la etiqueta no existe o ya fue retirada
-  crv --> u : «"etiqueta no encontrada" : String»
+  alt el lote tiene mercadería vencida sin retirar
+    crv --> u : «"producto: " + codigoProducto + ", lote: " + nroLote + ", cantidad vencida: " + cantidad : String»
+  else el lote no existe, no se trasladó o ya se retiró todo
+    crv --> u : «"no hay mercadería vencida para ese lote" : String»
+  end
+else el producto no existe
+  crv --> u : «"el producto no existe" : String»
 end
 deactivate crv
 

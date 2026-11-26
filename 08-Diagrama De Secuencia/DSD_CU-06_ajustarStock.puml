@@ -28,30 +28,38 @@ participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
-u -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
+u -> cas ++ : ajustarStock(nroLote : String, fechaVencimiento : Date, cantidadReal : int, motivo : String)
 cas -> resp ++ : esAdministrador()
 resp --> cas -- : «esAdmin : boolean»
 alt el usuario es administrador (RN-11)
   note right of cas : p es el producto elegido en seleccionarProducto
   alt la cantidad real no es negativa y hay motivo
-    cas -> p ++ : buscarLote(nroLote : String)
+    cas -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
     group bucle [para cada lote en lotes]
       p -> li ++ : getNroLote()
       li --> p -- : «nro : String»
+      p -> li ++ : getFechaVencimiento()
+      li --> p -- : «fecha : Date»
     end
     note right of p
-      si nro = nroLote
+      si nro = nroLote y fecha = fechaVencimiento
       lt = lotes[i]
       cortar iteración
     end note
     p --> cas -- : «lt : Lote»
-    create participant "<u>aj:AjusteStock</u>" as aj
-    cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
-    cas -> aj ++ : aplicar()
-    aj -> lt ++ : corregirCantidad(cantidadReal : int)
-    lt --> aj -- : «cantidadLote : int»
-    aj --> cas -- : «aplicado : boolean»
-    cas --> u : «"ajuste registrado" : String»
+    cas -> lt ++ : estaVencido(fecha : Date)
+    lt --> cas -- : «vencido : boolean»
+    alt el lote no está vencido
+      create participant "<u>aj:AjusteStock</u>" as aj
+      cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
+      cas -> aj ++ : aplicar()
+      aj -> lt ++ : corregirCantidad(cantidadReal : int)
+      lt --> aj -- : «cantidadLote : int»
+      aj --> cas -- : «aplicado : boolean»
+      cas --> u : «"ajuste registrado" : String»
+    else el lote está vencido (RN-26)
+      cas --> u : «"no se puede ajustar un lote vencido" : String»
+    end
   else la cantidad real es negativa o falta el motivo
     cas --> u : «"dato inválido o incompleto" : String»
   end

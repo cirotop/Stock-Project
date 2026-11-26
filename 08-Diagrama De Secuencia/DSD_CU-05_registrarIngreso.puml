@@ -27,6 +27,7 @@ participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
+participant "<u>lt:Lote</u>" as lt
 
 u -> cri ++ : registrarIngreso(codigoProducto : String, nroLote : String, cantidad : int, fechaVencimiento : Date)
 alt los datos están completos y la cantidad es mayor a 0
@@ -42,23 +43,33 @@ alt los datos están completos y la cantidad es mayor a 0
   end note
   cat --> cri -- : «p : Producto»
   alt el producto existe
-    cri -> p ++ : buscarLote(nroLote : String)
+    cri -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
     group bucle [para cada lote en lotes]
       p -> li ++ : getNroLote()
       li --> p -- : «nro : String»
+      p -> li ++ : getFechaVencimiento()
+      li --> p -- : «fecha : Date»
     end
     note right of p
-      si nro = nroLote
+      si nro = nroLote y fecha = fechaVencimiento
       lt = lotes[i]
       cortar iteración
     end note
     p --> cri -- : «lt : Lote»
-    note right of cri
-      vencida = fechaVencimiento anterior a la fecha actual
-      el texto indica si es un lote nuevo o si el lote
-      ya existe, y avisa si la mercadería está vencida
-    end note
-    cri --> u : «"ingreso a confirmar" : String»
+    cri -> lt ++ : estaVencido(fecha : Date)
+    lt --> cri -- : «loteVencido : boolean»
+    alt es un lote nuevo o el lote existente no está vencido
+      note right of cri
+        mismo número con otra fecha = lote nuevo (RN-27)
+        vencida = fechaVencimiento anterior a la fecha actual
+        el texto indica si es un lote nuevo o si el lote ya existe;
+        si la mercadería está vencida, pide elegir el depósito
+        (principal o vencidos, RN-25)
+      end note
+      cri --> u : «"ingreso a confirmar" : String»
+    else el lote existente ya está vencido
+      cri --> u : «"no se puede sumar a un lote vencido" : String»
+    end
   else el producto no existe
     cri --> u : «"el producto no existe" : String»
   end

@@ -29,11 +29,11 @@ Flujos de datos en reposo. Cada uno se identifica por su clave natural (@):
 
     Producto = @codigoProducto + nombreProducto + (descripcionProducto) + nombreCategoria + stockMinimo + estadoProducto
 
-    Lote = @codigoProducto + @nroLote + fechaVencimiento + cantidadLote
+    Lote = @codigoProducto + @nroLote + @fechaVencimiento + cantidadLote
 
-    StockVencido = @codigoEtiqueta + codigoProducto + nroLote + cantidad
+    StockVencido = @codigoProducto + @nroLote + @fechaVencimiento + cantidad
 
-El vencimiento se maneja **por lote**: la mercadería ingresa en cajas y cada caja se carga con su número de lote, al que se le asigna la fecha de vencimiento que trae impresa (RN-03, RN-04). Un producto tiene tantos lotes como ingresos haya recibido, cada uno con su propia fecha de vencimiento y su propia cantidad. El número de lote no se repite dentro de un mismo producto, pero dos productos distintos pueden tener el mismo número: por eso el lote se identifica por el producto más su número.
+El vencimiento se maneja **por lote**: la mercadería ingresa en cajas y el fabricante imprime en cada caja su número de lote y su fecha de vencimiento (RN-03, RN-04, RN-27). Un producto tiene tantos lotes como ingresos distintos haya recibido, cada uno con su propia fecha de vencimiento y su propia cantidad. Por eso el lote se identifica por el producto, su número y su fecha: dos productos pueden tener el mismo número, y si el mismo número de lote llega con otra fecha, es otro lote. El StockVencido de un lote se identifica igual, con los datos impresos en la caja, que es lo que se lee al trasladarlo y al retirarlo.
 
 ---
 
@@ -42,8 +42,11 @@ El vencimiento se maneja **por lote**: la mercadería ingresa en cajas y cada ca
 No se almacenan: el sistema los calcula a partir de los lotes.
 
     stockVigente = suma de cantidadLote de los lotes del producto que todavía no vencieron
+    stockPendienteDeTraslado = suma de cantidadLote de los lotes del producto que ya vencieron
     stockVencido = suma de cantidad de los registros de StockVencido del producto
-    stockTotalFisico = stockVigente + stockVencido          (RN-19)
+    stockTotalFisico = stockVigente + stockPendienteDeTraslado + stockVencido          (RN-19)
+
+Un lote vencido sigue en el depósito principal y cuenta como pendiente de traslado hasta que se registra el traslado (CU-10). Al trasladarlo, su cantidad pasa a StockVencido y cantidadLote queda en 0, así no se cuenta dos veces.
 
 ---
 
@@ -51,13 +54,17 @@ No se almacenan: el sistema los calcula a partir de los lotes.
 
 Transacciones que actualizan el stock:
 
-    IngresoMercaderia = @nroIngreso + codigoProducto + nroLote + cantidad + fechaIngreso + nombreUsuario
+    IngresoMercaderia = @nroIngreso + codigoProducto + nroLote + fechaVencimiento + cantidad + depositoIngreso + fechaIngreso + nombreUsuario
 
-    AjusteStock = @nroAjuste + codigoProducto + nroLote + cantidadReal + motivo + fechaAjuste + nombreUsuario
+    EgresoMercaderia = @nroEgreso + codigoProducto + cantidad + fechaEgreso + nombreUsuario
 
-    RetiroVencido = @nroRetiro + codigoEtiqueta + cantidad + fechaRetiro + nombreUsuario
+    AjusteStock = @nroAjuste + codigoProducto + nroLote + fechaVencimiento + cantidadReal + motivo + fechaAjuste + nombreUsuario
 
-El ingreso crea el lote con su fecha de vencimiento; el ajuste corrige la cantidad de un lote; el retiro descuenta del lote vencido identificado por su etiqueta.
+    TrasladoVencido = @nroTraslado + codigoProducto + nroLote + fechaVencimiento + cantidad + fechaTraslado + nombreUsuario
+
+    RetiroVencido = @nroRetiro + codigoProducto + nroLote + fechaVencimiento + cantidad + fechaRetiro + nombreUsuario
+
+El ingreso crea el lote con su fecha de vencimiento; el egreso descuenta la cantidad que sale de los lotes vigentes del producto, empezando por el que ingresó primero (FIFO); el ajuste corrige la cantidad de un lote; el traslado pasa toda la cantidad de un lote vencido al stock vencido; el retiro descuenta del stock vencido de ese lote.
 
 ---
 
@@ -68,6 +75,7 @@ Datos elementales cuyo valor se elige de un conjunto cerrado de alternativas:
     nombreRol = [ Administrador | Empleado ]
     estadoUsuario = [ activo | inactivo ]
     estadoProducto = [ activo | inactivo ]
+    depositoIngreso = [ principal | vencidos ]
 
 ---
 
@@ -90,16 +98,20 @@ Mínimas unidades indivisibles de datos, con su nombre, descripción, longitud, 
 | descripcionProducto | Descripción del producto. | 200 | Alfanumérico | Texto libre |
 | stockMinimo | Umbral mínimo que dispara la alerta de reposición. | — | Numérico (entero) | Continuo: {vi: 0; vf: n} |
 | estadoProducto | Estado del producto. | 1 | Booleano | Discreto: {(1, activo); (0, inactivo)} |
-| nroLote | Número del lote que viene impreso en la caja (clave junto con codigoProducto). | 30 | Alfanumérico | Texto libre |
-| fechaVencimiento | Fecha de vencimiento del lote, que vale para todas sus unidades. Puede ser anterior a la fecha actual si la mercadería llega vencida (CU-05, 3.c). | — | Fecha | Continuo: {vi: 01/01/2000; vf: n} |
+| nroLote | Número del lote que el fabricante imprime en la caja (clave junto con codigoProducto y fechaVencimiento). | 30 | Alfanumérico | Texto libre |
+| fechaVencimiento | Fecha de vencimiento que el fabricante imprime en la caja; vale para todas las unidades del lote y forma parte de su clave. Puede ser anterior a la fecha actual si la mercadería llega vencida (CU-05, 3.d). | — | Fecha | Continuo: {vi: 01/01/2000; vf: n} |
 | cantidadLote | Cantidad de unidades vigentes que quedan en el lote. | — | Numérico (entero) | Continuo: {vi: 0; vf: n} |
-| codigoEtiqueta | Código de la etiqueta del lote vencido, que se lee al retirarlo (clave). | 30 | Alfanumérico | Texto libre |
 | cantidad | Cantidad de unidades del registro o movimiento. En los movimientos es al menos 1; en StockVencido llega a 0 cuando se retira todo. | — | Numérico (entero) | Continuo: {vi: 0; vf: n} |
 | nroIngreso | Identificador del ingreso de mercadería (clave). | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
+| depositoIngreso | Depósito donde se guarda la mercadería ingresada. Solo puede ser "vencidos" si la mercadería llegó vencida (RN-25). | 10 | Alfanumérico | Discreto: {principal; vencidos} |
 | fechaIngreso | Fecha y hora del ingreso de mercadería (RN-07). | — | Fecha y hora | Continuo: {vi: 14/05/2026; vf: fecha actual} |
+| nroEgreso | Identificador del egreso de mercadería (clave). | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
+| fechaEgreso | Fecha y hora del egreso de mercadería (RN-07). | — | Fecha y hora | Continuo: {vi: 14/05/2026; vf: fecha actual} |
 | nroAjuste | Identificador del ajuste de stock (clave). | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
 | cantidadReal | Cantidad real contada que corrige la cantidad del lote. | — | Numérico (entero) | Continuo: {vi: 0; vf: n} |
 | motivo | Motivo de la corrección del stock. | 150 | Alfanumérico | Texto libre |
 | fechaAjuste | Fecha y hora del ajuste de stock (RN-07). | — | Fecha y hora | Continuo: {vi: 14/05/2026; vf: fecha actual} |
+| nroTraslado | Identificador del traslado de mercadería vencida al depósito de vencidos (clave). | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
+| fechaTraslado | Fecha y hora del traslado de la mercadería vencida (RN-07). | — | Fecha y hora | Continuo: {vi: 14/05/2026; vf: fecha actual} |
 | nroRetiro | Identificador del retiro de mercadería vencida (clave). | — | Numérico (entero) | Continuo: {vi: 1; vf: n} |
 | fechaRetiro | Fecha y hora del retiro de la mercadería vencida (RN-07). | — | Fecha y hora | Continuo: {vi: 14/05/2026; vf: fecha actual} |

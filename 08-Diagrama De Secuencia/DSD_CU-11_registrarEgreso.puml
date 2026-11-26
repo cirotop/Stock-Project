@@ -1,0 +1,86 @@
+@startuml DSD_CU-11_registrarEgreso
+' Diagrama de Secuencia de Diseño (DSD) - CU-11 Registrar egreso de mercadería - registrarEgreso
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+
+actor "<u>u:Usuario</u>" as u
+participant "<u>ceg:ControladorRegistrarEgreso</u>" as ceg
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
+
+u -> ceg ++ : registrarEgreso(codigoProducto : String, cantidad : int)
+ceg -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
+cat --> ceg -- : «p : Producto»
+alt el producto existe
+  ceg -> p ++ : estaActivo()
+  p --> ceg -- : «activo : boolean»
+  ceg -> cat ++ : calcularStockVigente(p : Producto)
+  cat -> p ++ : getLotes()
+  p --> cat -- : «lotes : Lote[]»
+  group bucle [para cada lote en lotes]
+    cat -> li ++ : estaVencido(fecha : Date)
+    li --> cat -- : «vencido : boolean»
+    cat -> li ++ : getCantidadLote()
+    li --> cat -- : «cantidadLote : int»
+  end
+  note right of cat
+    si vencido = false
+    stockVigente = stockVigente + cantidadLote
+  end note
+  cat --> ceg -- : «stockVigente : int»
+  alt el producto está activo y la cantidad es mayor a 0 y no supera el stock vigente
+    create participant "<u>eg:EgresoMercaderia</u>" as eg
+    ceg -->> eg : registrar(p : Producto, cantidad : int, responsable : Usuario)
+    ceg -> eg ++ : aplicar()
+    eg -> p ++ : getLotes()
+    p --> eg -- : «lotes : Lote[]»
+    note right of eg : restante = cantidad\nlos lotes están en el orden en que ingresaron (FIFO)
+    group bucle [para cada lote en lotes, mientras restante > 0]
+      eg -> li ++ : estaVencido(fecha : Date)
+      li --> eg -- : «vencido : boolean»
+      opt el lote no está vencido
+        eg -> li ++ : descontar(restante : int)
+        li --> eg -- : «descontado : int»
+      end
+    end
+    note right of eg : descontado = lo que el lote pudo dar\nrestante = restante - descontado (RN-24)
+    eg --> ceg -- : «aplicado : boolean»
+    ceg --> u : «"egreso registrado" : String»
+  else el producto está inactivo o la cantidad no es válida
+    ceg --> u : «"la cantidad no es válida" : String»
+  end
+else el producto no existe
+  ceg --> u : «"el producto no existe" : String»
+end
+deactivate ceg
+
+@enduml

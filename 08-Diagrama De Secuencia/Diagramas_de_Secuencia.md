@@ -11,6 +11,8 @@
 - **CU-07 - Registrar retiro de mercadería vencida**: `consultarProducto`, `registrarRetiro`
 - **CU-08 - Consultar productos con stock bajo**: `consultarStockBajo`
 - **CU-09 - Consultar próximos a vencer y stock**: `consultarProximosAVencer`, `consultarStock`
+- **CU-10 - Trasladar mercadería vencida**: `consultarPendientesDeTraslado`, `registrarTraslado`
+- **CU-11 - Registrar egreso de mercadería**: `registrarEgreso`
 
 ---
 
@@ -703,7 +705,7 @@ deactivate cgp
 
 ### `registrarIngreso`
 
-El usuario hace dos operaciones: primero carga los datos y el sistema le responde con un texto que dice si es un lote nuevo o existente y si la mercadería ya está vencida; después confirma con `confirmarIngreso`. Si quiere corregir el número de lote (3.b del CU), vuelve a enviar `registrarIngreso`.
+El usuario hace dos operaciones: primero carga los datos y el sistema le responde con un texto que dice si es un lote nuevo o existente y si la mercadería ya está vencida; después confirma con `confirmarIngreso`, indicando el depósito donde la guarda (si está vencida puede ir al de vencidos, RN-25). No se puede sumar a un lote vencido (RN-26). Si quiere corregir el número de lote (3.b del CU), vuelve a enviar `registrarIngreso`.
 
 ![DSD CU-05 registrarIngreso](DSD_CU-05_registrarIngreso.png)
 
@@ -740,6 +742,7 @@ participant "<u>cat:«Singleton»Catalogo</u>" as cat
 participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
+participant "<u>lt:Lote</u>" as lt
 
 u -> cri ++ : registrarIngreso(codigoProducto : String, nroLote : String, cantidad : int, fechaVencimiento : Date)
 alt los datos están completos y la cantidad es mayor a 0
@@ -755,23 +758,33 @@ alt los datos están completos y la cantidad es mayor a 0
   end note
   cat --> cri -- : «p : Producto»
   alt el producto existe
-    cri -> p ++ : buscarLote(nroLote : String)
+    cri -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
     group bucle [para cada lote en lotes]
       p -> li ++ : getNroLote()
       li --> p -- : «nro : String»
+      p -> li ++ : getFechaVencimiento()
+      li --> p -- : «fecha : Date»
     end
     note right of p
-      si nro = nroLote
+      si nro = nroLote y fecha = fechaVencimiento
       lt = lotes[i]
       cortar iteración
     end note
     p --> cri -- : «lt : Lote»
-    note right of cri
-      vencida = fechaVencimiento anterior a la fecha actual
-      el texto indica si es un lote nuevo o si el lote
-      ya existe, y avisa si la mercadería está vencida
-    end note
-    cri --> u : «"ingreso a confirmar" : String»
+    cri -> lt ++ : estaVencido(fecha : Date)
+    lt --> cri -- : «loteVencido : boolean»
+    alt es un lote nuevo o el lote existente no está vencido
+      note right of cri
+        mismo número con otra fecha = lote nuevo (RN-27)
+        vencida = fechaVencimiento anterior a la fecha actual
+        el texto indica si es un lote nuevo o si el lote ya existe;
+        si la mercadería está vencida, pide elegir el depósito
+        (principal o vencidos, RN-25)
+      end note
+      cri --> u : «"ingreso a confirmar" : String»
+    else el lote existente ya está vencido
+      cri --> u : «"no se puede sumar a un lote vencido" : String»
+    end
   else el producto no existe
     cri --> u : «"el producto no existe" : String»
   end
@@ -822,19 +835,23 @@ participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 collections "<u>lotes:Lote</u>" as ml <<multiobjeto>>
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+collections "<u>vencidos:StockVencido</u>" as mv <<multiobjeto>>
 
-u -> cri ++ : confirmarIngreso()
+u -> cri ++ : confirmarIngreso(depositoIngreso : String)
 note right of cri : p y los datos son los cargados en registrarIngreso
 create participant "<u>ing:IngresoMercaderia</u>" as ing
-cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
+cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, depositoIngreso : String, responsable : Usuario)
 cri -> ing ++ : aplicar()
-ing -> p ++ : buscarLote(nroLote : String)
+ing -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
 group bucle [para cada lote en lotes]
   p -> li ++ : getNroLote()
   li --> p -- : «nro : String»
+  p -> li ++ : getFechaVencimiento()
+  li --> p -- : «fecha : Date»
 end
 note right of p
-  si nro = nroLote
+  si nro = nroLote y fecha = fechaVencimiento
   lt = lotes[i]
   cortar iteración
 end note
@@ -849,6 +866,17 @@ alt es un lote nuevo
 else el lote ya existe
   ing -> lt ++ : aumentarCantidad(cantidad : int)
   lt --> ing -- : «cantidadLote : int»
+end
+opt la mercadería está vencida y depositoIngreso = vencidos (RN-25)
+  note right of ing : la mercadería vencida siempre es un lote nuevo (RN-26)
+  ing -> nl ++ : trasladarAVencido()
+  create participant "<u>sv:StockVencido</u>" as sv
+  nl -->> sv : crear(nl : Lote, cantidad : int)
+  nl --> ing -- : «sv : StockVencido»
+  ing -> cat ++ : agregarStockVencido(sv : StockVencido)
+  cat -> mv ++ : add(sv : StockVencido)
+  mv --> cat --
+  cat --> ing --
 end
 ing --> cri -- : «aplicado : boolean»
 cri --> u -- : «"ingreso registrado" : String»
@@ -961,30 +989,38 @@ participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 
-u -> cas ++ : ajustarStock(nroLote : String, cantidadReal : int, motivo : String)
+u -> cas ++ : ajustarStock(nroLote : String, fechaVencimiento : Date, cantidadReal : int, motivo : String)
 cas -> resp ++ : esAdministrador()
 resp --> cas -- : «esAdmin : boolean»
 alt el usuario es administrador (RN-11)
   note right of cas : p es el producto elegido en seleccionarProducto
   alt la cantidad real no es negativa y hay motivo
-    cas -> p ++ : buscarLote(nroLote : String)
+    cas -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
     group bucle [para cada lote en lotes]
       p -> li ++ : getNroLote()
       li --> p -- : «nro : String»
+      p -> li ++ : getFechaVencimiento()
+      li --> p -- : «fecha : Date»
     end
     note right of p
-      si nro = nroLote
+      si nro = nroLote y fecha = fechaVencimiento
       lt = lotes[i]
       cortar iteración
     end note
     p --> cas -- : «lt : Lote»
-    create participant "<u>aj:AjusteStock</u>" as aj
-    cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
-    cas -> aj ++ : aplicar()
-    aj -> lt ++ : corregirCantidad(cantidadReal : int)
-    lt --> aj -- : «cantidadLote : int»
-    aj --> cas -- : «aplicado : boolean»
-    cas --> u : «"ajuste registrado" : String»
+    cas -> lt ++ : estaVencido(fecha : Date)
+    lt --> cas -- : «vencido : boolean»
+    alt el lote no está vencido
+      create participant "<u>aj:AjusteStock</u>" as aj
+      cas -->> aj : registrar(lt : Lote, cantidadReal : int, motivo : String, responsable : Usuario)
+      cas -> aj ++ : aplicar()
+      aj -> lt ++ : corregirCantidad(cantidadReal : int)
+      lt --> aj -- : «cantidadLote : int»
+      aj --> cas -- : «aplicado : boolean»
+      cas --> u : «"ajuste registrado" : String»
+    else el lote está vencido (RN-26)
+      cas --> u : «"no se puede ajustar un lote vencido" : String»
+    end
   else la cantidad real es negativa o falta el motivo
     cas --> u : «"dato inválido o incompleto" : String»
   end
@@ -1036,38 +1072,50 @@ skinparam NoteBorderColor black
 actor "<u>u:Usuario</u>" as u
 participant "<u>crv:ControladorRegistrarRetiro</u>" as crv
 participant "<u>cat:«Singleton»Catalogo</u>" as cat
-participant "<u>vencidos[i]:StockVencido</u>" as vi
-participant "<u>sv:StockVencido</u>" as sv
-participant "<u>lt:Lote</u>" as lt
+participant "<u>productos[i]:Producto</u>" as pi
 participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
+participant "<u>lt:Lote</u>" as lt
+participant "<u>sv:StockVencido</u>" as sv
 
 note over u : el laboratorio retira físicamente la mercadería\ndel depósito (no interactúa con el sistema)
-u -> crv ++ : consultarProducto(codigoEtiqueta : String)
-crv -> cat ++ : buscarStockVencido(codigoEtiqueta : String)
-group bucle [para cada stockVencido en vencidos]
-  cat -> vi ++ : getCodigoEtiqueta()
-  vi --> cat -- : «codigo : String»
-  cat -> vi ++ : estaRetirado()
-  vi --> cat -- : «retirado : boolean»
+u -> crv ++ : consultarProducto(codigoProducto : String, nroLote : String, fechaVencimiento : Date)
+crv -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
 end
 note right of cat
-  si codigo = codigoEtiqueta y retirado = false
-  sv = vencidos[i]
+  si codigo = codigoProducto
+  p = productos[i]
   cortar iteración
 end note
-cat --> crv -- : «sv : StockVencido»
-alt la etiqueta corresponde a mercadería vencida
-  crv -> sv ++ : getLote()
-  sv --> crv -- : «lt : Lote»
-  crv -> lt ++ : getProducto()
-  lt --> crv -- : «p : Producto»
-  crv -> p ++ : getCodigoProducto()
-  p --> crv -- : «codigoProducto : String»
+cat --> crv -- : «p : Producto»
+alt el producto existe
+  crv -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
+  group bucle [para cada lote en lotes]
+    p -> li ++ : getNroLote()
+    li --> p -- : «nro : String»
+    p -> li ++ : getFechaVencimiento()
+    li --> p -- : «fecha : Date»
+  end
+  note right of p
+    si nro = nroLote y fecha = fechaVencimiento
+    lt = lotes[i]
+    cortar iteración
+  end note
+  p --> crv -- : «lt : Lote»
+  crv -> lt ++ : getStockVencido()
+  lt --> crv -- : «sv : StockVencido»
   crv -> sv ++ : getCantidad()
   sv --> crv -- : «cantidad : int»
-  crv --> u : «"producto: " + codigoProducto + ", cantidad: " + cantidad : String»
-else la etiqueta no existe o ya fue retirada
-  crv --> u : «"etiqueta no encontrada" : String»
+  alt el lote tiene mercadería vencida sin retirar
+    crv --> u : «"producto: " + codigoProducto + ", lote: " + nroLote + ", cantidad vencida: " + cantidad : String»
+  else el lote no existe, no se trasladó o ya se retiró todo
+    crv --> u : «"no hay mercadería vencida para ese lote" : String»
+  end
+else el producto no existe
+  crv --> u : «"el producto no existe" : String»
 end
 deactivate crv
 
@@ -1113,7 +1161,7 @@ participant "<u>sv:StockVencido</u>" as sv
 
 u -> crv ++ : registrarRetiro(cantidadRetirada : int)
 note right of crv : sv y cantidad son los obtenidos en consultarProducto
-alt la cantidad retirada no supera la cantidad vencida
+alt la cantidad retirada es mayor a 0 y no supera la cantidad vencida
   create participant "<u>rv:RetiroVencido</u>" as rv
   crv -->> rv : registrar(sv : StockVencido, cantidadRetirada : int, responsable : Usuario)
   crv -> rv ++ : aplicar()
@@ -1121,8 +1169,8 @@ alt la cantidad retirada no supera la cantidad vencida
   sv --> rv -- : «cantidadRestante : int»
   rv --> crv -- : «aplicado : boolean»
   crv --> u : «"retiro registrado" : String»
-else la cantidad retirada supera la cantidad vencida
-  crv --> u : «"la cantidad supera la del lote" : String»
+else la cantidad retirada es 0 o supera la cantidad vencida
+  crv --> u : «"la cantidad no es válida" : String»
 end
 deactivate crv
 
@@ -1331,6 +1379,20 @@ note right of cat
   stockVigente = stockVigente + cantidadLote
 end note
 cat --> cpv -- : «stockVigente : int»
+cpv -> cat ++ : calcularStockPendienteDeTraslado(p : Producto)
+cat -> p ++ : getLotes()
+p --> cat -- : «lotes : Lote[]»
+group bucle [para cada lote en lotes]
+  cat -> li ++ : estaVencido(fecha : Date)
+  li --> cat -- : «vencido : boolean»
+  cat -> li ++ : getCantidadLote()
+  li --> cat -- : «cantidadLote : int»
+end
+note right of cat
+  si vencido = true
+  stockPendiente = stockPendiente + cantidadLote
+end note
+cat --> cpv -- : «stockPendiente : int»
 cpv -> cat ++ : calcularStockVencido(p : Producto)
 group bucle [para cada stockVencido en vencidos]
   cat -> vi ++ : getLote()
@@ -1347,14 +1409,285 @@ end note
 cat --> cpv -- : «stockVencido : int»
 note right of cpv
   stockVigente: suma de los lotes no vencidos (Lote)
-  stockVencido: suma de los vencidos sin retirar (StockVencido)
-  stockTotalFisico = stockVigente + stockVencido (RN-19)
+  stockPendiente: suma de los lotes vencidos sin trasladar (Lote)
+  stockVencido: suma de los trasladados sin retirar (StockVencido)
+  stockTotalFisico = stockVigente + stockPendiente + stockVencido (RN-19)
 end note
-cpv --> u -- : «"vigente: " + stockVigente + ", vencido: " + stockVencido + ", total físico: " + stockTotalFisico : String»
+cpv --> u -- : «"vigente: " + stockVigente + ", pendiente de traslado: " + stockPendiente + ", vencido: " + stockVencido + ", total físico: " + stockTotalFisico : String»
 
 @enduml
 ```
 
 </details>
 
-> Los tres tipos de stock y de dónde sale cada uno: el **vigente** suma la cantidad de los lotes no vencidos (`Lote`), el **vencido** suma la cantidad de la mercadería vencida sin retirar (`StockVencido`) y el **total físico** es la suma de ambos (RN-19).
+> Los tipos de stock y de dónde sale cada uno: el **vigente** suma la cantidad de los lotes no vencidos (`Lote`), el **pendiente de traslado** suma la de los lotes vencidos que siguen en el depósito principal (`Lote`), el **vencido** suma la de la mercadería trasladada sin retirar (`StockVencido`) y el **total físico** es la suma de los tres (RN-19).
+
+---
+
+## CU-10 - Trasladar mercadería vencida
+
+### `consultarPendientesDeTraslado`
+
+![DSD CU-10 consultarPendientesDeTraslado](DSD_CU-10_consultarPendientesDeTraslado.png)
+
+<details>
+<summary>Código PlantUML</summary>
+
+```plantuml
+@startuml DSD_CU-10_consultarPendientesDeTraslado
+' Diagrama de Secuencia de Diseño (DSD) - CU-10 Trasladar mercadería vencida - consultarPendientesDeTraslado
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+
+actor "<u>u:Usuario</u>" as u
+participant "<u>ctv:ControladorTrasladarVencido</u>" as ctv
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>lotes[j]:Lote</u>" as li
+
+u -> ctv ++ : consultarPendientesDeTraslado()
+ctv -> cat ++ : listarPendientesDeTraslado()
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getLotes()
+  pi --> cat -- : «lotes : Lote[]»
+  group bucle [para cada lote en lotes]
+    cat -> li ++ : estaPendienteDeTraslado(fecha : Date)
+    li --> cat -- : «pendiente : boolean»
+  end
+end
+note right of cat
+  pendiente = el lote venció y todavía tiene cantidad (RN-15)
+  si pendiente
+  agregar lotes[j] a pendientes de traslado
+end note
+cat --> ctv -- : «pendientes : Lote[]»
+alt hay lotes pendientes de traslado
+  ctv --> u : «pendientes : String[]»
+else no hay lotes pendientes de traslado
+  ctv --> u : «"no hay mercadería pendiente de traslado" : String»
+end
+deactivate ctv
+
+@enduml
+```
+
+</details>
+
+### `registrarTraslado`
+
+![DSD CU-10 registrarTraslado](DSD_CU-10_registrarTraslado.png)
+
+<details>
+<summary>Código PlantUML</summary>
+
+```plantuml
+@startuml DSD_CU-10_registrarTraslado
+' Diagrama de Secuencia de Diseño (DSD) - CU-10 Trasladar mercadería vencida - registrarTraslado
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+
+actor "<u>u:Usuario</u>" as u
+participant "<u>ctv:ControladorTrasladarVencido</u>" as ctv
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
+participant "<u>lt:Lote</u>" as lt
+collections "<u>vencidos:StockVencido</u>" as mv <<multiobjeto>>
+
+note over u : el usuario lleva la caja al depósito de vencidos\ny lee el código del producto, el lote y la fecha
+u -> ctv ++ : registrarTraslado(codigoProducto : String, nroLote : String, fechaVencimiento : Date)
+ctv -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
+cat --> ctv -- : «p : Producto»
+alt el producto existe
+  ctv -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
+  group bucle [para cada lote en lotes]
+    p -> li ++ : getNroLote()
+    li --> p -- : «nro : String»
+    p -> li ++ : getFechaVencimiento()
+    li --> p -- : «fecha : Date»
+  end
+  note right of p
+    si nro = nroLote y fecha = fechaVencimiento
+    lt = lotes[i]
+    cortar iteración
+  end note
+  p --> ctv -- : «lt : Lote»
+  ctv -> lt ++ : estaPendienteDeTraslado(fecha : Date)
+  lt --> ctv -- : «pendiente : boolean»
+  alt el lote existe y está pendiente de traslado
+    create participant "<u>tv:TrasladoVencido</u>" as tv
+    ctv -->> tv : registrar(lt : Lote, responsable : Usuario)
+    ctv -> tv ++ : aplicar()
+    tv -> lt ++ : trasladarAVencido()
+    create participant "<u>sv:StockVencido</u>" as sv
+    lt -->> sv : crear(lt : Lote, cantidad : int)
+    note right of lt : cantidad = cantidadLote\ncantidadLote = 0 (RN-23)
+    lt --> tv -- : «sv : StockVencido»
+    tv -> cat ++ : agregarStockVencido(sv : StockVencido)
+    cat -> mv ++ : add(sv : StockVencido)
+    mv --> cat --
+    cat --> tv --
+    tv --> ctv -- : «aplicado : boolean»
+    ctv --> u : «"traslado registrado" : String»
+  else el lote no existe o no está pendiente de traslado
+    ctv --> u : «"el lote no está pendiente de traslado" : String»
+  end
+else el producto no existe
+  ctv --> u : «"el producto no existe" : String»
+end
+deactivate ctv
+
+@enduml
+```
+
+</details>
+
+> Ningún proceso automático mueve stock: el lote vencido queda pendiente de traslado hasta que el usuario registra el traslado, que queda con su usuario y fecha (RN-07). Toda la cantidad del lote pasa a `StockVencido` y el lote queda en 0 (RN-23), así el total físico no cambia.
+
+---
+
+## CU-11 - Registrar egreso de mercadería
+
+![DSD CU-11 registrarEgreso](DSD_CU-11_registrarEgreso.png)
+
+<details>
+<summary>Código PlantUML</summary>
+
+```plantuml
+@startuml DSD_CU-11_registrarEgreso
+' Diagrama de Secuencia de Diseño (DSD) - CU-11 Registrar egreso de mercadería - registrarEgreso
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+
+actor "<u>u:Usuario</u>" as u
+participant "<u>ceg:ControladorRegistrarEgreso</u>" as ceg
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
+
+u -> ceg ++ : registrarEgreso(codigoProducto : String, cantidad : int)
+ceg -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
+cat --> ceg -- : «p : Producto»
+alt el producto existe
+  ceg -> p ++ : estaActivo()
+  p --> ceg -- : «activo : boolean»
+  ceg -> cat ++ : calcularStockVigente(p : Producto)
+  cat -> p ++ : getLotes()
+  p --> cat -- : «lotes : Lote[]»
+  group bucle [para cada lote en lotes]
+    cat -> li ++ : estaVencido(fecha : Date)
+    li --> cat -- : «vencido : boolean»
+    cat -> li ++ : getCantidadLote()
+    li --> cat -- : «cantidadLote : int»
+  end
+  note right of cat
+    si vencido = false
+    stockVigente = stockVigente + cantidadLote
+  end note
+  cat --> ceg -- : «stockVigente : int»
+  alt el producto está activo y la cantidad es mayor a 0 y no supera el stock vigente
+    create participant "<u>eg:EgresoMercaderia</u>" as eg
+    ceg -->> eg : registrar(p : Producto, cantidad : int, responsable : Usuario)
+    ceg -> eg ++ : aplicar()
+    eg -> p ++ : getLotes()
+    p --> eg -- : «lotes : Lote[]»
+    note right of eg : restante = cantidad\nlos lotes están en el orden en que ingresaron (FIFO)
+    group bucle [para cada lote en lotes, mientras restante > 0]
+      eg -> li ++ : estaVencido(fecha : Date)
+      li --> eg -- : «vencido : boolean»
+      opt el lote no está vencido
+        eg -> li ++ : descontar(restante : int)
+        li --> eg -- : «descontado : int»
+      end
+    end
+    note right of eg : descontado = lo que el lote pudo dar\nrestante = restante - descontado (RN-24)
+    eg --> ceg -- : «aplicado : boolean»
+    ceg --> u : «"egreso registrado" : String»
+  else el producto está inactivo o la cantidad no es válida
+    ceg --> u : «"la cantidad no es válida" : String»
+  end
+else el producto no existe
+  ceg --> u : «"el producto no existe" : String»
+end
+deactivate ceg
+
+@enduml
+```
+
+</details>
+
+> El egreso registra solo la cantidad que sale, sin datos de venta (fuera de alcance). Descuenta de los lotes vigentes en el orden en que ingresaron (FIFO, entrevista 4) y saltea los vencidos. El ajuste (CU-06) queda solo para correcciones.

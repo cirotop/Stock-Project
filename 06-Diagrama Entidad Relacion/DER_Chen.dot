@@ -3,10 +3,12 @@
 // Diagrama Entidad-Relacion - Notacion de Chen - Stock Project
 // [rectangulo] = entidad   <rombo> = relacion (sin atributos)   (elipse) = atributo
 // atributo subrayado = clave    elipse punteada = atributo derivado
-// doble rectangulo = entidad debil (Lote: su numero solo es unico dentro del producto)
+// doble rectangulo = entidad debil (Lote: su numero solo es unico dentro del producto;
+//                    StockVencido: se identifica por su lote)
 // doble rombo = relacion identificadora
 //
-// El vencimiento se maneja por LOTE: cada caja ingresa con su numero de lote
+// El vencimiento se maneja por LOTE: el fabricante imprime en la caja el numero de lote
+// y la fecha de vencimiento; el lote se identifica por producto + numero + fecha (RN-27)
 // y a ese lote se le asigna la fecha de vencimiento impresa (RN-03, RN-04).
 
 graph DER_Chen {
@@ -21,12 +23,14 @@ graph DER_Chen {
   Categoria     [label="Categoria"];
   Producto      [label="Producto"];
   Lote          [label="Lote", peripheries=2];
-  StockVencido  [label="StockVencido"];
+  StockVencido  [label="StockVencido", peripheries=2];
 
   // Los movimientos de stock son entidades, no relaciones:
   // de ese modo las relaciones quedan sin atributos.
   IngresoMercaderia [label="IngresoMercaderia"];
+  EgresoMercaderia  [label="EgresoMercaderia"];
   AjusteStock       [label="AjusteStock"];
+  TrasladoVencido   [label="TrasladoVencido"];
   RetiroVencido     [label="RetiroVencido"];
 
   // ============ Relaciones (sin atributos) ============
@@ -34,11 +38,15 @@ graph DER_Chen {
   R_Asigna     [label="Asigna"];
   R_Clasifica  [label="Clasifica"];
   R_Agrupa     [label="Agrupa", peripheries=2];
-  R_Vence      [label="Vence en"];
+  R_Vence      [label="Vence en", peripheries=2];
   R_Registra   [label="Registra"];
   R_Crea       [label="Crea"];
   R_Realiza    [label="Realiza"];
   R_Corrige    [label="Corrige"];
+  R_Emite      [label="Emite"];
+  R_SaleDe     [label="Sale de"];
+  R_Hace       [label="Hace"];
+  R_Traslada   [label="Traslada"];
   R_Efectua    [label="Efectua"];
   R_Descuenta  [label="Descuenta"];
 
@@ -59,35 +67,46 @@ graph DER_Chen {
   A_nombreCategoria      [label=<<U>nombreCategoria</U>>];
   A_descripcionCategoria [label="descripcionCategoria"];
 
-  // -- Producto (stockVigente, stockVencido y total son derivados de los lotes) --
+  // -- Producto (stockVigente, stockPendienteDeTraslado, stockVencido y total son derivados) --
   A_codigoProducto      [label=<<U>codigoProducto</U>>];
   A_nombreProducto      [label="nombreProducto"];
   A_descripcionProducto [label="descripcionProducto"];
   A_stockMinimo         [label="stockMinimo"];
   A_estadoProducto      [label="estadoProducto"];
   A_stockVigente        [label="stockVigente",     style="filled,dashed", fillcolor="#F7F7F7"];
+  A_stockPendiente      [label="stockPendienteDeTraslado", style="filled,dashed", fillcolor="#F7F7F7"];
   A_stockVencidoD       [label="stockVencido",     style="filled,dashed", fillcolor="#F7F7F7"];
   A_stockTotal          [label="stockTotalFisico", style="filled,dashed", fillcolor="#F7F7F7"];
 
   // -- Lote --
-  A_nroLote      [label=<<U>nroLote</U>>];   // clave parcial: se identifica junto con el producto
-  A_fechaVenc    [label="fechaVencimiento"];
+  A_nroLote      [label=<<U>nroLote</U>>];   // clave parcial (nroLote + fechaVencimiento) junto con el producto
+  A_fechaVenc    [label=<<U>fechaVencimiento</U>>];
   A_cantidadLote [label="cantidadLote"];
 
-  // -- StockVencido --
-  A_codigoEtiqueta  [label=<<U>codigoEtiqueta</U>>];
+  // -- StockVencido (se identifica por su lote: codigoProducto + nroLote + fechaVencimiento) --
   A_cantidadVencida [label="cantidad"];
 
   // -- IngresoMercaderia --
   A_nroIngreso   [label=<<U>nroIngreso</U>>];
   A_cantIngreso  [label="cantidad"];
   A_fechaIngreso [label="fechaIngreso"];
+  A_depositoIngreso [label="depositoIngreso"];
+
+  // -- EgresoMercaderia --
+  A_nroEgreso   [label=<<U>nroEgreso</U>>];
+  A_cantEgreso  [label="cantidad"];
+  A_fechaEgreso [label="fechaEgreso"];
 
   // -- AjusteStock --
   A_nroAjuste    [label=<<U>nroAjuste</U>>];
   A_cantidadReal [label="cantidadReal"];
   A_motivo       [label="motivo"];
   A_fechaAjuste  [label="fechaAjuste"];
+
+  // -- TrasladoVencido --
+  A_nroTraslado   [label=<<U>nroTraslado</U>>];
+  A_cantTraslado  [label="cantidad"];
+  A_fechaTraslado [label="fechaTraslado"];
 
   // -- RetiroVencido --
   A_nroRetiro   [label=<<U>nroRetiro</U>>];
@@ -100,12 +119,14 @@ graph DER_Chen {
   Usuario -- {A_nombreUsuario A_contrasena A_nombreCompleto A_estadoUsuario};
   Categoria -- {A_nombreCategoria A_descripcionCategoria};
   Producto -- {A_codigoProducto A_nombreProducto A_descripcionProducto A_stockMinimo A_estadoProducto};
-  Producto -- {A_stockVigente A_stockVencidoD A_stockTotal} [style=dashed];
+  Producto -- {A_stockVigente A_stockPendiente A_stockVencidoD A_stockTotal} [style=dashed];
   Lote -- {A_nroLote A_fechaVenc A_cantidadLote};
-  StockVencido -- {A_codigoEtiqueta A_cantidadVencida};
+  StockVencido -- {A_cantidadVencida};
 
-  IngresoMercaderia -- {A_nroIngreso A_cantIngreso A_fechaIngreso};
+  IngresoMercaderia -- {A_nroIngreso A_cantIngreso A_depositoIngreso A_fechaIngreso};
+  EgresoMercaderia  -- {A_nroEgreso A_cantEgreso A_fechaEgreso};
   AjusteStock       -- {A_nroAjuste A_cantidadReal A_motivo A_fechaAjuste};
+  TrasladoVencido   -- {A_nroTraslado A_cantTraslado A_fechaTraslado};
   RetiroVencido     -- {A_nroRetiro A_cantRetiro A_fechaRetiro};
 
   // ============ Entidad -- Relacion -- Entidad (con cardinalidad) ============
@@ -117,7 +138,7 @@ graph DER_Chen {
   Categoria   -- R_Clasifica [label="1"];
   R_Clasifica -- Producto    [label="N"];
 
-  // Un producto se agrupa en lotes; al vencer, el lote pasa a stock vencido
+  // Un producto se agrupa en lotes; al trasladarse, el lote vencido pasa a stock vencido
   Producto -- R_Agrupa     [label="1"];
   R_Agrupa -- Lote         [label="N"];
   Lote     -- R_Vence      [label="1"];
@@ -129,13 +150,25 @@ graph DER_Chen {
   IngresoMercaderia -- R_Crea            [label="N"];
   R_Crea            -- Lote              [label="1"];
 
+  // Egreso de mercaderia: descuenta de los lotes vigentes por FIFO
+  Usuario          -- R_Emite         [label="1"];
+  R_Emite          -- EgresoMercaderia [label="N"];
+  EgresoMercaderia -- R_SaleDe        [label="N"];
+  R_SaleDe         -- Lote            [label="M"];
+
   // Ajuste de stock: corrige la cantidad de un lote
   Usuario     -- R_Realiza   [label="1"];
   R_Realiza   -- AjusteStock [label="N"];
   AjusteStock -- R_Corrige   [label="N"];
   R_Corrige   -- Lote        [label="1"];
 
-  // Retiro de mercaderia vencida: descuenta del lote vencido por su etiqueta
+  // Traslado de mercaderia vencida: pasa el lote vencido al deposito de vencidos
+  Usuario         -- R_Hace          [label="1"];
+  R_Hace          -- TrasladoVencido [label="N"];
+  TrasladoVencido -- R_Traslada      [label="1"];
+  R_Traslada      -- Lote            [label="1"];
+
+  // Retiro de mercaderia vencida: descuenta del stock vencido del lote
   Usuario       -- R_Efectua      [label="1"];
   R_Efectua     -- RetiroVencido  [label="N"];
   RetiroVencido -- R_Descuenta    [label="N"];

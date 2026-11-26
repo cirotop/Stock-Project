@@ -56,6 +56,20 @@ note right of cat
   stockVigente = stockVigente + cantidadLote
 end note
 cat --> cpv -- : «stockVigente : int»
+cpv -> cat ++ : calcularStockPendienteDeTraslado(p : Producto)
+cat -> p ++ : getLotes()
+p --> cat -- : «lotes : Lote[]»
+group bucle [para cada lote en lotes]
+  cat -> li ++ : estaVencido(fecha : Date)
+  li --> cat -- : «vencido : boolean»
+  cat -> li ++ : getCantidadLote()
+  li --> cat -- : «cantidadLote : int»
+end
+note right of cat
+  si vencido = true
+  stockPendiente = stockPendiente + cantidadLote
+end note
+cat --> cpv -- : «stockPendiente : int»
 cpv -> cat ++ : calcularStockVencido(p : Producto)
 group bucle [para cada stockVencido en vencidos]
   cat -> vi ++ : getLote()
@@ -72,9 +86,10 @@ end note
 cat --> cpv -- : «stockVencido : int»
 note right of cpv
   stockVigente: suma de los lotes no vencidos (Lote)
-  stockVencido: suma de los vencidos sin retirar (StockVencido)
-  stockTotalFisico = stockVigente + stockVencido (RN-19)
+  stockPendiente: suma de los lotes vencidos sin trasladar (Lote)
+  stockVencido: suma de los trasladados sin retirar (StockVencido)
+  stockTotalFisico = stockVigente + stockPendiente + stockVencido (RN-19)
 end note
-cpv --> u -- : «"vigente: " + stockVigente + ", vencido: " + stockVencido + ", total físico: " + stockTotalFisico : String»
+cpv --> u -- : «"vigente: " + stockVigente + ", pendiente de traslado: " + stockPendiente + ", vencido: " + stockVencido + ", total físico: " + stockTotalFisico : String»
 
 @enduml

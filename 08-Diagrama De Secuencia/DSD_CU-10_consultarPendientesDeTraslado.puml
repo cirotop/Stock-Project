@@ -1,0 +1,53 @@
+@startuml DSD_CU-10_consultarPendientesDeTraslado
+' Diagrama de Secuencia de Diseño (DSD) - CU-10 Trasladar mercadería vencida - consultarPendientesDeTraslado
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+
+actor "<u>u:Usuario</u>" as u
+participant "<u>ctv:ControladorTrasladarVencido</u>" as ctv
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>lotes[j]:Lote</u>" as li
+
+u -> ctv ++ : consultarPendientesDeTraslado()
+ctv -> cat ++ : listarPendientesDeTraslado()
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getLotes()
+  pi --> cat -- : «lotes : Lote[]»
+  group bucle [para cada lote en lotes]
+    cat -> li ++ : estaPendienteDeTraslado(fecha : Date)
+    li --> cat -- : «pendiente : boolean»
+  end
+end
+note right of cat
+  pendiente = el lote venció y todavía tiene cantidad (RN-15)
+  si pendiente
+  agregar lotes[j] a pendientes de traslado
+end note
+cat --> ctv -- : «pendientes : Lote[]»
+alt hay lotes pendientes de traslado
+  ctv --> u : «pendientes : String[]»
+else no hay lotes pendientes de traslado
+  ctv --> u : «"no hay mercadería pendiente de traslado" : String»
+end
+deactivate ctv
+
+@enduml

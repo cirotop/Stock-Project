@@ -1,0 +1,85 @@
+@startuml DSD_CU-10_registrarTraslado
+' Diagrama de Secuencia de Diseño (DSD) - CU-10 Trasladar mercadería vencida - registrarTraslado
+' Estilo de los ejemplos de la teoría (introducirArticulo / crearNuevaVenta).
+hide footbox
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam sequenceMessageAlign center
+skinparam ArrowColor black
+skinparam ParticipantBackgroundColor white
+skinparam ParticipantBorderColor black
+skinparam CollectionsBackgroundColor white
+skinparam CollectionsBorderColor black
+skinparam ActorBackgroundColor white
+skinparam ActorBorderColor black
+skinparam LifeLineBorderColor black
+skinparam LifeLineBackgroundColor white
+skinparam SequenceGroupBackgroundColor white
+skinparam SequenceGroupBorderColor black
+skinparam SequenceGroupHeaderFontColor black
+skinparam NoteBackgroundColor white
+skinparam NoteBorderColor black
+
+actor "<u>u:Usuario</u>" as u
+participant "<u>ctv:ControladorTrasladarVencido</u>" as ctv
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+participant "<u>productos[i]:Producto</u>" as pi
+participant "<u>p:Producto</u>" as p
+participant "<u>lotes[i]:Lote</u>" as li
+participant "<u>lt:Lote</u>" as lt
+collections "<u>vencidos:StockVencido</u>" as mv <<multiobjeto>>
+
+note over u : el usuario lleva la caja al depósito de vencidos\ny lee el código del producto, el lote y la fecha
+u -> ctv ++ : registrarTraslado(codigoProducto : String, nroLote : String, fechaVencimiento : Date)
+ctv -> cat ++ : buscarProducto(codigoProducto : String)
+group bucle [para cada producto en productos]
+  cat -> pi ++ : getCodigoProducto()
+  pi --> cat -- : «codigo : String»
+end
+note right of cat
+  si codigo = codigoProducto
+  p = productos[i]
+  cortar iteración
+end note
+cat --> ctv -- : «p : Producto»
+alt el producto existe
+  ctv -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
+  group bucle [para cada lote en lotes]
+    p -> li ++ : getNroLote()
+    li --> p -- : «nro : String»
+    p -> li ++ : getFechaVencimiento()
+    li --> p -- : «fecha : Date»
+  end
+  note right of p
+    si nro = nroLote y fecha = fechaVencimiento
+    lt = lotes[i]
+    cortar iteración
+  end note
+  p --> ctv -- : «lt : Lote»
+  ctv -> lt ++ : estaPendienteDeTraslado(fecha : Date)
+  lt --> ctv -- : «pendiente : boolean»
+  alt el lote existe y está pendiente de traslado
+    create participant "<u>tv:TrasladoVencido</u>" as tv
+    ctv -->> tv : registrar(lt : Lote, responsable : Usuario)
+    ctv -> tv ++ : aplicar()
+    tv -> lt ++ : trasladarAVencido()
+    create participant "<u>sv:StockVencido</u>" as sv
+    lt -->> sv : crear(lt : Lote, cantidad : int)
+    note right of lt : cantidad = cantidadLote\ncantidadLote = 0 (RN-23)
+    lt --> tv -- : «sv : StockVencido»
+    tv -> cat ++ : agregarStockVencido(sv : StockVencido)
+    cat -> mv ++ : add(sv : StockVencido)
+    mv --> cat --
+    cat --> tv --
+    tv --> ctv -- : «aplicado : boolean»
+    ctv --> u : «"traslado registrado" : String»
+  else el lote no existe o no está pendiente de traslado
+    ctv --> u : «"el lote no está pendiente de traslado" : String»
+  end
+else el producto no existe
+  ctv --> u : «"el producto no existe" : String»
+end
+deactivate ctv
+
+@enduml

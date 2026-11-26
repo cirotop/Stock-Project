@@ -7,7 +7,7 @@
 ' Alcance: solo control de stock. Fuera de alcance: ventas, facturacion, clientes,
 ' cuenta corriente, medios de pago, proveedores, caja y listas de precios.
 ' Las entidades se identifican por su clave natural; los movimientos, por su numero
-' (nroIngreso, nroAjuste, nroRetiro), como en el diccionario. El Lote se identifica
+' (nroIngreso, nroEgreso, nroAjuste, nroTraslado, nroRetiro), como en el diccionario. El Lote se identifica
 ' por su numero dentro del producto.
 ' Cada operacion declara sus datos de entrada (parametros) y de salida (tipo de retorno).
 ' Cada clase es responsable de sus propios datos: el alta es una operacion de clase
@@ -15,9 +15,13 @@
 ' Usuario solo conserva lo suyo: sus datos, permisos y estado. La autenticacion y el
 ' manejo de sesion NO son datos ni responsabilidad de la entidad Usuario: los realiza
 ' el sistema (control de acceso), por eso no figuran como operaciones de la clase.
+' El lote se identifica por producto + nroLote + fechaVencimiento, que el fabricante
+' imprime en la caja (RN-27).
 ' El vencimiento se maneja por LOTE: cada caja ingresa con su numero de lote y a ese
 ' lote se le asigna la fecha de vencimiento impresa (RN-03, RN-04). El stock vencido
 ' es responsabilidad del Lote / StockVencido, no del Producto (RD-02).
+' Un lote vencido queda pendiente de traslado hasta que el usuario lo traslada al
+' deposito de vencidos (TrasladoVencido): ningun proceso automatico mueve stock (RN-07).
 
 skinparam shadowing false
 skinparam roundcorner 5
@@ -78,14 +82,16 @@ class Catalogo <<Singleton>> {
   --
   + buscarProducto(codigoProducto : String) : Producto
   + buscarCategoria(nombreCategoria : String) : Categoria
-  + buscarStockVencido(codigoEtiqueta : String) : StockVencido
   + agregarProducto(producto : Producto) : void
   + agregarCategoria(categoria : Categoria) : void
+  + agregarStockVencido(stockVencido : StockVencido) : void
   + listarProductos() : Producto[]
   + listarStockBajo() : Producto[]
   + listarProximosAVencer(dias : int) : Lote[]
+  + listarPendientesDeTraslado() : Lote[]
   + listarVencidos() : StockVencido[]
   + calcularStockVigente(producto : Producto) : int
+  + calcularStockPendienteDeTraslado(producto : Producto) : int
   + calcularStockVencido(producto : Producto) : int
 }
 
@@ -109,7 +115,7 @@ class Producto {
   + {static} crear(codigoProducto : String, nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int, responsable : Usuario) : Producto
   + modificar(nombreProducto : String, descripcionProducto : String, categoria : Categoria, stockMinimo : int) : void
   + darBaja() : void
-  + buscarLote(nroLote : String) : Lote
+  + buscarLote(nroLote : String, fechaVencimiento : Date) : Lote
   + agregarLote(lote : Lote) : void
   + getLotes() : Lote[]
   + getCodigoProducto() : String
@@ -119,28 +125,30 @@ class Producto {
 
 class Lote {
   - nroLote : String  <<clave en el producto>>
-  - fechaVencimiento : Date
+  - fechaVencimiento : Date  <<clave en el producto>>
   - cantidadLote : int
   --
   + {static} crear(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date) : Lote
   + aumentarCantidad(cantidad : int) : int
+  + descontar(cantidad : int) : int
   + corregirCantidad(cantidadReal : int) : int
-  + vencer(codigoEtiqueta : String) : StockVencido
+  + trasladarAVencido() : StockVencido
   + estaVencido(fecha : Date) : boolean
+  + estaPendienteDeTraslado(fecha : Date) : boolean
   + estaProximoAVencer(dias : int) : boolean
   + getNroLote() : String
   + getCantidadLote() : int
   + getFechaVencimiento() : Date
   + getProducto() : Producto
+  + getStockVencido() : StockVencido
 }
 
 class StockVencido {
-  - codigoEtiqueta : String  <<clave>>
   - cantidad : int
   --
+  + {static} crear(lote : Lote, cantidad : int) : StockVencido
   + descontar(cantidad : int) : int
   + estaRetirado() : boolean
-  + getCodigoEtiqueta() : String
   + getCantidad() : int
   + getLote() : Lote
 }
@@ -161,9 +169,22 @@ class IngresoMercaderia {
   - nroIngreso : int  <<clave>>
   - codigoProducto : String
   - nroLote : String
+  - fechaVencimiento : Date
+  - cantidad : int
+  - depositoIngreso : String
+  --
+  + {static} registrar(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, depositoIngreso : String, responsable : Usuario) : IngresoMercaderia
+  + aplicar() : boolean
+  + getProducto() : Producto
+  + getCantidad() : int
+}
+
+class EgresoMercaderia {
+  - nroEgreso : int  <<clave>>
+  - codigoProducto : String
   - cantidad : int
   --
-  + {static} registrar(producto : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario) : IngresoMercaderia
+  + {static} registrar(producto : Producto, cantidad : int, responsable : Usuario) : EgresoMercaderia
   + aplicar() : boolean
   + getProducto() : Producto
   + getCantidad() : int
@@ -173,6 +194,7 @@ class AjusteStock {
   - nroAjuste : int  <<clave>>
   - codigoProducto : String
   - nroLote : String
+  - fechaVencimiento : Date
   - cantidadReal : int
   - motivo : String
   --
@@ -182,9 +204,24 @@ class AjusteStock {
   + getMotivo() : String
 }
 
+class TrasladoVencido {
+  - nroTraslado : int  <<clave>>
+  - codigoProducto : String
+  - nroLote : String
+  - fechaVencimiento : Date
+  - cantidad : int
+  --
+  + {static} registrar(lote : Lote, responsable : Usuario) : TrasladoVencido
+  + aplicar() : boolean
+  + getProducto() : Producto
+  + getCantidad() : int
+}
+
 class RetiroVencido {
   - nroRetiro : int  <<clave>>
-  - codigoEtiqueta : String
+  - codigoProducto : String
+  - nroLote : String
+  - fechaVencimiento : Date
   - cantidad : int
   --
   + {static} registrar(loteVencido : StockVencido, cantidad : int, responsable : Usuario) : RetiroVencido
@@ -208,13 +245,17 @@ Producto "1" *-- "0..*" Lote : se agrupa en >
 Lote "1" -- "0..1" StockVencido : vence en >
 
 MovimientoStock <|-- IngresoMercaderia
+MovimientoStock <|-- EgresoMercaderia
 MovimientoStock <|-- AjusteStock
+MovimientoStock <|-- TrasladoVencido
 MovimientoStock <|-- RetiroVencido
 
 Usuario "1" -- "0..*" MovimientoStock : registra >
 
 IngresoMercaderia "0..*" --> "1" Lote : crea >
+EgresoMercaderia "0..*" --> "1..*" Lote : descuenta de >
 AjusteStock "0..*" --> "1" Lote : corrige >
+TrasladoVencido "0..1" --> "1" Lote : traslada >
 RetiroVencido "0..*" --> "1" StockVencido : descuenta >
 
 note bottom of Usuario
@@ -226,15 +267,17 @@ note bottom of Usuario
   categorias y productos, y el ajuste de stock, exigen un
   usuario Administrador. El controlador de cada operacion
   lo verifica con esAdministrador() sobre el usuario
-  responsable. Los roles son fijos (TipoRol). El ingreso, el retiro de
-  vencidos y las consultas los puede ejecutar el Empleado.
+  responsable. Los roles son fijos (TipoRol). El ingreso, el egreso,
+  el traslado y el retiro de vencidos y las consultas los puede
+  ejecutar el Empleado. El ajuste queda solo para correcciones.
 end note
 
 note bottom of Catalogo
   El Catalogo (Singleton) centraliza las consultas del inventario que
   no son de un producto puntual: buscar, listar, calcular el stock
-  vigente y vencido de un producto, y los avisos de stock bajo y de
-  vencimientos (recorriendo los lotes de cada producto).
+  vigente, pendiente de traslado y vencido de un producto, y los
+  listados de stock bajo, proximos a vencer y pendientes de traslado
+  (recorriendo los lotes de cada producto).
   Asi Producto no se encarga de juntar ni contar.
   RegistroDeUsuarios (Singleton) cumple el mismo papel para
   usuarios y roles.
@@ -243,8 +286,19 @@ end note
 note bottom of Lote
   RN-04: todas las unidades del lote comparten
   la fecha de vencimiento impresa en la caja.
-  RN-15: al vencer, su cantidad pasa a StockVencido
-  con el codigo de etiqueta que se lee al retirarlo.
+  RN-25: si ingresa vencido y se guarda en el
+  deposito de vencidos, el ingreso lo pasa a
+  StockVencido. RN-26: un lote vencido no recibe
+  ingresos ni ajustes.
+  RN-24: el egreso descuenta de los lotes vigentes
+  en el orden en que ingresaron (FIFO).
+  RN-15: al vencer queda pendiente de traslado
+  (estaVencido y cantidadLote > 0).
+  RN-23: al trasladarlo (CU-10), trasladarAVencido()
+  crea el StockVencido con toda su cantidad y deja
+  cantidadLote en 0. El lote y su StockVencido se
+  identifican por codigoProducto + nroLote +
+  fechaVencimiento (RN-27).
 end note
 
 @enduml

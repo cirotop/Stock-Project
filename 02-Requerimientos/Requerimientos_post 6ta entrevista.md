@@ -17,23 +17,26 @@
 
 ### RF-03 Control de stock
 - Registro de ingreso de mercadería que incrementa el stock del producto.
+- Registro de egreso de mercadería que descuenta del stock vigente, empezando por el lote que ingresó primero (FIFO). Solo registra la cantidad que sale, sin datos de venta.
 - Actualización automática del stock ante cada ingreso, movimiento o ajuste.
 - Definición de un stock mínimo por producto.
 - Listado de consulta de los productos con stock bajo.
-- Ajuste manual de stock con registro del motivo.
+- Ajuste manual de stock con registro del motivo, solo para correcciones.
 
 ### RF-04 Vencimiento y stock vencido (eje principal)
-- Registro del número de lote y de su fecha de vencimiento al ingresar la mercadería (una fecha por lote).
-- Distinción del stock de cada producto entre **vigente** y **vencido**.
-- Cuando un lote alcanza su fecha de vencimiento, su cantidad pasa a contabilizarse como stock vencido.
-- El stock vencido se descuenta del total únicamente al retirarse para su devolución al laboratorio, mediante la lectura de su etiqueta.
-- Listado de consulta de los lotes próximos a vencer, y consulta del stock vigente, vencido y total físico de cada producto.
+- Registro del número de lote y de su fecha de vencimiento al ingresar la mercadería, ambos impresos por el fabricante en la caja. Un lote se identifica por el producto, su número y su fecha: si llega el mismo número con otra fecha, es otro lote.
+- Distinción del stock de cada producto entre **vigente**, **pendiente de traslado** y **vencido**.
+- Cuando un lote alcanza su fecha de vencimiento, su cantidad pasa a contabilizarse como stock pendiente de traslado y aparece en el listado de pendientes de traslado.
+- Si la mercadería ingresa ya vencida, el usuario elige si se guarda en el depósito principal (queda pendiente de traslado) o en el de vencidos (pasa directamente a stock vencido).
+- Registro del traslado de un lote vencido al depósito de vencidos, leyendo el código del producto, el número de lote y la fecha de vencimiento: su cantidad pasa a stock vencido.
+- El stock vencido se descuenta del total únicamente al retirarse para su devolución al laboratorio, leyendo el código del producto, el número de lote y la fecha de vencimiento.
+- Listado de consulta de los lotes próximos a vencer, y consulta del stock vigente, pendiente de traslado, vencido y total físico de cada producto.
 
 ### RF-05 Datos
 - Migración de los datos de stock existentes desde las fuentes actuales (papel y planilla de Google).
 
 ### Fuera de alcance
-Punto de venta / ventas, facturación, listas de precios, proveedores, clientes, cuenta corriente, medios de pago, caja y resúmenes, e integración con el sistema del laboratorio (el laboratorio se contempla solo como destino físico de la mercadería vencida).
+Punto de venta / ventas (el egreso de mercadería se registra sin datos de venta), facturación, listas de precios, proveedores, clientes, cuenta corriente, medios de pago, caja y resúmenes, e integración con el sistema del laboratorio (el laboratorio se contempla solo como destino físico de la mercadería vencida).
 
 ---
 
@@ -44,7 +47,7 @@ Punto de venta / ventas, facturación, listas de precios, proveedores, clientes,
 
 - **RNF-01 Seguridad:** acceso autenticado con usuario y contraseña; restricción de funciones según el rol.
 - **RNF-02 Fiabilidad e integridad:** las bajas son lógicas (no se elimina información) y toda operación que modifica el stock queda registrada con el usuario y la fecha/hora.
-- **RNF-03 Usabilidad:** interfaz simple que reduzca la curva de aprendizaje en la transición del papel y la planilla de Google; las alertas de stock bajo y de próximos a vencer se presentan como listados de consulta.
+- **RNF-03 Usabilidad:** interfaz simple que reduzca la curva de aprendizaje en la transición del papel y la planilla de Google; las alertas de stock bajo, de próximos a vencer y de pendientes de traslado se presentan como listados de consulta.
 - **RNF-04 Eficiencia:** el sistema debe agilizar el registro y la consulta del stock respecto del proceso manual actual, con tiempos de respuesta ágiles.
 - **RNF-05 Disponibilidad:** respaldo automático de la información, dada la dependencia previa del papel y la planilla de Google.
 
@@ -62,5 +65,5 @@ Punto de venta / ventas, facturación, listas de precios, proveedores, clientes,
 ## 3. Requerimientos del Dominio
 
 - **RD-01** Los productos llegan en cajas, y todos los productos de una misma caja comparten la misma fecha de vencimiento.
-- **RD-02** El total de stock de un producto debe coincidir siempre con sus existencias físicas. El stock vigente y el stock vencido se registran en tablas separadas, y el total físico surge de la suma de ambos (stock vigente + stock vencido). El stock vencido permanece físicamente separado en otro depósito del mismo edificio, pero se sigue contabilizando dentro de ese total Es decir solo se trabaja con el stock vigente, el otro es solo para un conteo.
-- **RD-03** La mercadería vencida no se descuenta del stock mientras siga en el edificio; recién se descuenta cuando se retira para devolverla al laboratorio y se lee su etiqueta.
+- **RD-02** El total de stock de un producto debe coincidir siempre con sus existencias físicas, y surge de la suma del stock vigente, el pendiente de traslado y el vencido. El vigente y el pendiente de traslado están en el depósito principal; el vencido permanece separado en otro depósito del mismo edificio, pero se sigue contabilizando dentro de ese total. Es decir, solo se trabaja con el stock vigente: los otros dos son solo para el conteo.
+- **RD-03** La mercadería vencida no se descuenta del stock mientras siga en el edificio; recién se descuenta cuando se retira para devolverla al laboratorio y se leen el código del producto, el número de lote y la fecha de vencimiento.

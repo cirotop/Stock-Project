@@ -27,19 +27,23 @@ participant "<u>p:Producto</u>" as p
 participant "<u>lotes[i]:Lote</u>" as li
 participant "<u>lt:Lote</u>" as lt
 collections "<u>lotes:Lote</u>" as ml <<multiobjeto>>
+participant "<u>cat:«Singleton»Catalogo</u>" as cat
+collections "<u>vencidos:StockVencido</u>" as mv <<multiobjeto>>
 
-u -> cri ++ : confirmarIngreso()
+u -> cri ++ : confirmarIngreso(depositoIngreso : String)
 note right of cri : p y los datos son los cargados en registrarIngreso
 create participant "<u>ing:IngresoMercaderia</u>" as ing
-cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, responsable : Usuario)
+cri -->> ing : registrar(p : Producto, nroLote : String, cantidad : int, fechaVencimiento : Date, depositoIngreso : String, responsable : Usuario)
 cri -> ing ++ : aplicar()
-ing -> p ++ : buscarLote(nroLote : String)
+ing -> p ++ : buscarLote(nroLote : String, fechaVencimiento : Date)
 group bucle [para cada lote en lotes]
   p -> li ++ : getNroLote()
   li --> p -- : «nro : String»
+  p -> li ++ : getFechaVencimiento()
+  li --> p -- : «fecha : Date»
 end
 note right of p
-  si nro = nroLote
+  si nro = nroLote y fecha = fechaVencimiento
   lt = lotes[i]
   cortar iteración
 end note
@@ -54,6 +58,17 @@ alt es un lote nuevo
 else el lote ya existe
   ing -> lt ++ : aumentarCantidad(cantidad : int)
   lt --> ing -- : «cantidadLote : int»
+end
+opt la mercadería está vencida y depositoIngreso = vencidos (RN-25)
+  note right of ing : la mercadería vencida siempre es un lote nuevo (RN-26)
+  ing -> nl ++ : trasladarAVencido()
+  create participant "<u>sv:StockVencido</u>" as sv
+  nl -->> sv : crear(nl : Lote, cantidad : int)
+  nl --> ing -- : «sv : StockVencido»
+  ing -> cat ++ : agregarStockVencido(sv : StockVencido)
+  cat -> mv ++ : add(sv : StockVencido)
+  mv --> cat --
+  cat --> ing --
 end
 ing --> cri -- : «aplicado : boolean»
 cri --> u -- : «"ingreso registrado" : String»
